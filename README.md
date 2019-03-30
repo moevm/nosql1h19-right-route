@@ -8,7 +8,7 @@
 - `graph` - построение графа, поиск путей
 - `osm_handler` - чтение *.osm и запись в MongoDB
 
-####Overview
+#### Overview
 Подключение к БД и запуск парсинга *.osm файла. (Перед повторным парсингом необходимо удалить БД: `mongo_client.drop_database('osm')`)
 ```python
 import osm_handler

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="none">
+        <item
+                android:id="@+id/nav_available_area"
+                android:icon="@drawable/ic_available"
+                android:title="@string/nav_available_area_title"/>
+        <item
+                android:id="@+id/nav_data"
+                android:icon="@drawable/ic_import_export"
+                android:title="@string/nav_data_title"/>
+        <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_about"
+                android:title="@string/nav_about_title"/>
+        <item
+                android:id="@+id/nav_exit"
+                android:icon="@drawable/ic_exit"
+                android:title="@string/nav_exit_title"/>
+    </group>
+</menu>

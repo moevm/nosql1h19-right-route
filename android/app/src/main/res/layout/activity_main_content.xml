@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
@@ -10,4 +10,26 @@
             android:layout_height="match_parent"
             android:id="@+id/map"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="@dimen/floating_action_button_margin"
+            android:id="@+id/floating_directions_button"
+            android:src="@drawable/ic_directions"
+            app:backgroundTint="@color/colorPrimary"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_anchor="@id/floating_directions_button"
+            app:layout_anchorGravity="top|center_horizontal"
+            android:layout_gravity="center|top"
+            app:useCompatPadding="true"
+            android:id="@+id/floating_location_button"
+            android:src="@drawable/ic_my_location"
+            app:backgroundTint="#ffffff"/>
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

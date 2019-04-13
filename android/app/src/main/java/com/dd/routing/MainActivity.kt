@@ -1,9 +1,12 @@
 package com.dd.routing
 
 
+import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -11,6 +14,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import android.widget.LinearLayout
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -66,9 +72,18 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-//        testButton.setOnClickListener {
-//            drawer_layout.openDrawer(GravityCompat.START)
-//        }
+        menu_button.setOnClickListener {
+            drawer_layout.openDrawer(GravityCompat.START)
+        }
+        //TODO: remove underline in search
+
+
+
+        // Удаляет иконку поиска из поисковой строки
+        val magId = resources.getIdentifier("android:id/search_mag_icon", null, null)
+        val magImage = search_view.findViewById(magId) as ImageView
+        magImage.layoutParams = LinearLayout.LayoutParams(0, 0)
+
     }
 
 

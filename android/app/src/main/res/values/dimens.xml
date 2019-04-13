@@ -2,5 +2,10 @@
 <resources>
     <dimen name="nav_header_height">192dp</dimen>
     <dimen name="nav_header_padding">16dp</dimen>
-    <dimen name="floating_action_button_margin">16dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="search_bar_side_margin">8dp</dimen>
+    <dimen name="search_bar_top_margin">32dp</dimen>
+    <dimen name="round_corner_radius">8dp</dimen>
+    <dimen name="menu_button_size">50dp</dimen>
+
 </resources>

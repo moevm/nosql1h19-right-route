@@ -11,6 +11,11 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="about_activity_title">About</string>
+    <string name="data_activity_title">Import/Export data</string>
+
 
     <string name="info_text"><![CDATA[<b>Тут</b> должна быть какая-то информация]]></string>
+    <string name="backup_button_text">Backup</string>
+    <string name="restore_button_text">Restore from backup</string>
+    <string name="import_button_text">Import selected area</string>
 </resources>

@@ -16,4 +16,10 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="Button" parent="Base.TextAppearance.AppCompat.Widget.Button">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:background">@drawable/button</item>
+    </style>
+
 </resources>

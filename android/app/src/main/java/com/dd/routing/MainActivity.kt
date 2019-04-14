@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_available_area -> {
                 }
                 R.id.nav_data -> {
+                    startActivity(Intent(this, DataActivity::class.java))
                 }
                 R.id.nav_about -> {
                     startActivity(Intent(this, AboutActivity::class.java))

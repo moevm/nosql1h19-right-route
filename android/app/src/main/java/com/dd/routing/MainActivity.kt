@@ -1,12 +1,12 @@
 package com.dd.routing
 
 
-import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -14,8 +14,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import android.widget.LinearLayout
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -42,6 +40,13 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_about -> {
                 }
                 R.id.nav_exit -> {
+                    AlertDialog.Builder(this)
+                        .setMessage(R.string.exit_dialog_text)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.yes) { dialog, which ->
+                            finishAffinity()
+                        }.setNegativeButton(R.string.no, null)
+                        .show()
                 }
                 else -> {
                 }
@@ -76,7 +81,6 @@ class MainActivity : AppCompatActivity() {
             drawer_layout.openDrawer(GravityCompat.START)
         }
         //TODO: remove underline in search
-
 
 
         // Удаляет иконку поиска из поисковой строки

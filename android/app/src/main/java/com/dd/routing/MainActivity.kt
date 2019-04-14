@@ -32,9 +32,9 @@ class MainActivity : AppCompatActivity() {
 
 
         navigation_view.setNavigationItemSelectedListener { menuItem ->
-            //TODO: implement behaviour
             when (menuItem.itemId) {
                 R.id.nav_available_area -> {
+                    startActivity(Intent(this, AvailableAreaActivity::class.java))
                 }
                 R.id.nav_data -> {
                     startActivity(Intent(this, DataActivity::class.java))
@@ -87,9 +87,13 @@ class MainActivity : AppCompatActivity() {
 
 
         // Удаляет иконку поиска из поисковой строки
-        val magId = resources.getIdentifier("android:id/search_mag_icon", null, null)
-        val magImage = search_view.findViewById(magId) as ImageView
-        magImage.layoutParams = LinearLayout.LayoutParams(0, 0)
+        (search_view.findViewById(
+            resources.getIdentifier(
+                "android:id/search_mag_icon",
+                null,
+                null
+            )
+        ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
     }
 

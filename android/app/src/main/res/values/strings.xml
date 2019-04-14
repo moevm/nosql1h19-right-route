@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Routing</string>
+    <string name="nav_header_title">The best routing app</string>
+    <string name="nav_available_area_title">Available area</string>
+    <string name="nav_data_title">Import/Export data</string>
+    <string name="nav_about_title">About</string>
+    <string name="nav_exit_title">Exit</string>
+    <string name="menu_button_description">Menu</string>
+    <string name="search_query_hint">Search maps</string>
 </resources>

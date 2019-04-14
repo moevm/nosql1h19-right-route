@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <org.osmdroid.views.MapView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/map"/>
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="@dimen/fab_margin"
+            android:id="@+id/floating_directions_button"
+            android:src="@drawable/ic_directions"
+            app:backgroundTint="@color/colorPrimary"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_anchor="@id/floating_directions_button"
+            app:layout_anchorGravity="top|center_horizontal"
+            android:layout_gravity="center|top"
+            app:useCompatPadding="true"
+            android:id="@+id/floating_location_button"
+            android:src="@drawable/ic_my_location"
+            app:backgroundTint="#ffffff"/>
+
+
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/search_bar_side_margin"
+            android:layout_marginEnd="@dimen/search_bar_side_margin"
+            android:layout_marginTop="@dimen/search_bar_top_margin"
+            android:layout_gravity="top"
+
+            android:background="@drawable/rounded_corners_white">
+        <!--TODO: elevation-->
+        <ImageButton
+                android:layout_width="@dimen/menu_button_size"
+                android:layout_height="@dimen/menu_button_size"
+                android:id="@+id/menu_button"
+                android:src="@drawable/ic_menu"
+                android:background="@drawable/rounded_corners_white"
+                android:contentDescription="@string/menu_button_description"/>
+
+        <SearchView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/search_view"
+                android:queryHint="@string/search_query_hint"
+                android:iconifiedByDefault="false"
+                android:focusable="false"/>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

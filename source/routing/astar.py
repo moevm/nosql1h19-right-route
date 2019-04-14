@@ -101,7 +101,7 @@ class AStar:
                 if current.came_from:
                     prev = nodes_client_for_left.find_one({'_id': current.came_from.data}, {'loc': 1})
 
-            for neighbor in [searchNodes[n] for n in self.neighbors(current.data)]:
+            for neighbor in [searchNodes[int(n)] for n in self.neighbors(current.data)]:
                 if neighbor.closed:
                     continue
 

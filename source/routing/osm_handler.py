@@ -15,26 +15,12 @@ class OsmHandler(object):
         self.db_client = db_client
 
         self.db_client.nodes.create_index([('loc', pymongo.GEO2D)])
-        self.db_client.nodes.create_index([('id', pymongo.ASCENDING),
-                                            ('version', pymongo.DESCENDING)])
+        self.db_client.nodes.create_index([('id', pymongo.ASCENDING), ('version', pymongo.DESCENDING)])
 
         self.db_client.ways.create_index([('loc', pymongo.GEO2D)])
-        self.db_client.ways.create_index([('id', pymongo.ASCENDING),
-                                           ('version', pymongo.DESCENDING)])
+        self.db_client.ways.create_index([('id', pymongo.ASCENDING), ('version', pymongo.DESCENDING)])
 
-        self.stat_nodes = 0
-        self.stat_ways = 0
-        self.lastStatString = ""
-        self.statsCount = 0
-
-    def write_stats_to_screen(self):
-        return None
-        for char in self.lastStatString:
-            sys.stdout.write('\b')
-        self.lastStatString = "%d nodes, %d ways" % (self.stat_nodes, self.stat_ways)
-        sys.stdout.write(self.lastStatString)
-
-    def fillDefault(self, attrs):
+    def fill_default(self, attrs):
         record = dict(_id=int(attrs['id']),
                       tags={})
         return record
@@ -56,7 +42,7 @@ class OsmHandler(object):
                 if name == 'bounds':
                     bounds = attrs
                 if name == 'node':
-                    record = self.fillDefault(attrs)
+                    record = self.fill_default(attrs)
                     loc = [float(attrs['lat']),
                            float(attrs['lon'])]
                     record['loc'] = loc
@@ -81,7 +67,7 @@ class OsmHandler(object):
                         self.db_client.nodes.insert_many(nodes)
                         nodes = []
 
-                    record = self.fillDefault(attrs)
+                    record = self.fill_default(attrs)
                     record['nodes'] = []
                 elif name == 'relation':
                     continue
@@ -100,10 +86,7 @@ class OsmHandler(object):
                     if len(nodes) > 2500:
                         self.db_client.nodes.insert_many(nodes)
                         nodes = []
-                        self.write_stats_to_screen()
-
                     record = {}
-                    self.stat_nodes = self.stat_nodes + 1
                 elif name == 'way':
                     if len(record['tags']) == 0:
                         del record['tags']
@@ -124,11 +107,6 @@ class OsmHandler(object):
                         ways = []
 
                     record = {}
-                    self.statsCount = self.statsCount + 1
-                    if self.statsCount > 1000:
-                        self.write_stats_to_screen()
-                        self.statsCount = 0
-                    self.stat_ways = self.stat_ways + 1
                 elif name == 'relation':
                     continue
             elem.clear()
@@ -151,5 +129,4 @@ if __name__ == "__main__":
     client.drop_database("osm")  # полное обновление бд
     handler = OsmHandler(client.osm)
     handler.parse(open(filename, encoding='utf-8'))
-    handler.write_stats_to_screen()
     client.close()

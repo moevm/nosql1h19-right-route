@@ -1,6 +1,7 @@
 package com.dd.routing
 
 
+import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.View
@@ -38,12 +39,13 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_data -> {
                 }
                 R.id.nav_about -> {
+                    startActivity(Intent(this, AboutActivity::class.java))
                 }
                 R.id.nav_exit -> {
                     AlertDialog.Builder(this)
                         .setMessage(R.string.exit_dialog_text)
                         .setCancelable(false)
-                        .setPositiveButton(R.string.yes) { dialog, which ->
+                        .setPositiveButton(R.string.yes) { _, _ ->
                             finishAffinity()
                         }.setNegativeButton(R.string.no, null)
                         .show()

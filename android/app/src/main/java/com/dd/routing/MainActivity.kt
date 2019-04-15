@@ -114,14 +114,16 @@ class MainActivity : AppCompatActivity() {
 
         location_button.setOnClickListener {
             val location = locationOverlay.myLocation
-            map.zoomToBoundingBox(
-                BoundingBox(
-                    location.latitude + 0.05,
-                    location.longitude + 0.05,
-                    location.latitude - 0.05,
-                    location.longitude - 0.05
-                ), true
-            )
+            if (locationOverlay.isMyLocationEnabled) {
+                map.zoomToBoundingBox(
+                    BoundingBox(
+                        location.latitude + 0.05,
+                        location.longitude + 0.05,
+                        location.latitude - 0.05,
+                        location.longitude - 0.05
+                    ), true
+                )
+            }
         }
     }
 

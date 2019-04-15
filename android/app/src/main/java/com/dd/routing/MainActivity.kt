@@ -15,10 +15,13 @@ import androidx.drawerlayout.widget.DrawerLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.views.overlay.MapEventsOverlay
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
@@ -26,6 +29,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 class MainActivity : AppCompatActivity() {
 
     lateinit var locationOverlay: MyLocationNewOverlay
+    val markers = ArrayList<Marker>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +66,30 @@ class MainActivity : AppCompatActivity() {
         locationOverlay = MyLocationNewOverlay(provider, map)
         locationOverlay.enableMyLocation()
         map.overlays.add(locationOverlay)
+
+
+        // Map events overlay
+        val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+                val marker = Marker(map)
+                if(markers.size == 2) {
+                    map.overlays.remove(markers[0])
+                    markers.removeAt(0)
+                }
+                markers.add(marker)
+                marker.position = p
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                map.overlays.add(marker)
+                map.invalidate()
+                return true
+            }
+
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                return false
+            }
+        })
+        map.overlays.add(mapEventsOverlay)
+
 
         setListeners() // Устанавлеваем слушатели на все
     }

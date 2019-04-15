@@ -17,6 +17,8 @@ import kotlinx.android.synthetic.main.activity_main_content.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
@@ -37,6 +39,11 @@ class MainActivity : AppCompatActivity() {
         map.apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+            minZoomLevel = 3.0
+            maxZoomLevel = 20.0
+            controller.setZoom(5.0)
+            controller.setCenter(GeoPoint(59.991149, 30.318757))
+            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
 
         //TODO: remove underline in search

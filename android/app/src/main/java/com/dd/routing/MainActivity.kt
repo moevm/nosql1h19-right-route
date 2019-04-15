@@ -1,12 +1,13 @@
 package com.dd.routing
 
 
-import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -14,8 +15,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import android.widget.LinearLayout
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,15 +32,24 @@ class MainActivity : AppCompatActivity() {
 
 
         navigation_view.setNavigationItemSelectedListener { menuItem ->
-            //TODO: implement behaviour
             when (menuItem.itemId) {
                 R.id.nav_available_area -> {
+                    startActivity(Intent(this, AvailableAreaActivity::class.java))
                 }
                 R.id.nav_data -> {
+                    startActivity(Intent(this, DataActivity::class.java))
                 }
                 R.id.nav_about -> {
+                    startActivity(Intent(this, AboutActivity::class.java))
                 }
                 R.id.nav_exit -> {
+                    AlertDialog.Builder(this)
+                        .setMessage(R.string.exit_dialog_text)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.yes) { _, _ ->
+                            finishAffinity()
+                        }.setNegativeButton(R.string.no, null)
+                        .show()
                 }
                 else -> {
                 }
@@ -78,11 +86,14 @@ class MainActivity : AppCompatActivity() {
         //TODO: remove underline in search
 
 
-
         // Удаляет иконку поиска из поисковой строки
-        val magId = resources.getIdentifier("android:id/search_mag_icon", null, null)
-        val magImage = search_view.findViewById(magId) as ImageView
-        magImage.layoutParams = LinearLayout.LayoutParams(0, 0)
+        (search_view.findViewById(
+            resources.getIdentifier(
+                "android:id/search_mag_icon",
+                null,
+                null
+            )
+        ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
     }
 

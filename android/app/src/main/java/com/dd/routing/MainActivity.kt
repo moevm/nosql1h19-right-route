@@ -2,6 +2,7 @@ package com.dd.routing
 
 
 import android.content.Intent
+import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.View
@@ -15,22 +16,51 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 
 class MainActivity : AppCompatActivity() {
 
+    lateinit var locationOverlay: MyLocationNewOverlay
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         //Setup mapView
         Configuration.getInstance()
             .load(applicationContext, PreferenceManager.getDefaultSharedPreferences(applicationContext))
+
         map.apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
         }
 
+        //TODO: remove underline in search
+        // Удаляет иконку поиска из поисковой строки
+        (search_view.findViewById(
+            resources.getIdentifier(
+                "android:id/search_mag_icon",
+                null,
+                null
+            )
+        ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
+        // Отображает местоположение
+        val provider = GpsMyLocationProvider(this)
+        provider.addLocationSource(LocationManager.GPS_PROVIDER)
+        locationOverlay = MyLocationNewOverlay(provider, map)
+        locationOverlay.enableMyLocation()
+        map.overlays.add(locationOverlay)
+
+        setListeners() // Устанавлеваем слушатели на все
+    }
+
+
+    private fun setListeners() {
         navigation_view.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_available_area -> {
@@ -50,8 +80,6 @@ class MainActivity : AppCompatActivity() {
                             finishAffinity()
                         }.setNegativeButton(R.string.no, null)
                         .show()
-                }
-                else -> {
                 }
             }
             drawer_layout.closeDrawers()
@@ -83,18 +111,18 @@ class MainActivity : AppCompatActivity() {
         menu_button.setOnClickListener {
             drawer_layout.openDrawer(GravityCompat.START)
         }
-        //TODO: remove underline in search
 
-
-        // Удаляет иконку поиска из поисковой строки
-        (search_view.findViewById(
-            resources.getIdentifier(
-                "android:id/search_mag_icon",
-                null,
-                null
+        location_button.setOnClickListener {
+            val location = locationOverlay.myLocation
+            map.zoomToBoundingBox(
+                BoundingBox(
+                    location.latitude + 0.05,
+                    location.longitude + 0.05,
+                    location.latitude - 0.05,
+                    location.longitude - 0.05
+                ), true
             )
-        ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
-
+        }
     }
 
 

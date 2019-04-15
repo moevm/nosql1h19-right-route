@@ -1,9 +1,10 @@
 package com.dd.routing
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
-import kotlinx.android.synthetic.main.activity_main_content.*
+import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_data.*
+import kotlinx.android.synthetic.main.activity_main_content.map
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 
@@ -21,7 +22,12 @@ class DataActivity : AppCompatActivity() {
         }
 
 
+
+        setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = resources.getString(R.string.data_activity_title)
+        toolbar.setNavigationOnClickListener {
+            onBackPressed()
+        }
     }
 }

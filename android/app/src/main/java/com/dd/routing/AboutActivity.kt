@@ -20,9 +20,12 @@ class AboutActivity : AppCompatActivity() {
         }
 
 
-
+        setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = resources.getString(R.string.about_activity_title)
+        toolbar.setNavigationOnClickListener {
+            onBackPressed()
+        }
 
     }
 }

@@ -7,6 +7,19 @@
         tools:context=".DataActivity">
 
 
+    <androidx.appcompat.widget.Toolbar
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:background="@color/colorPrimary">
+        <!--TODO elevation-->
+
+    </androidx.appcompat.widget.Toolbar>
+
     <Button
             style="@style/Button"
             android:id="@+id/backup_button"
@@ -15,7 +28,7 @@
             android:text="@string/backup_button_text"
             app:layout_constraintRight_toLeftOf="@id/restore_button"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@id/toolbar"/>
 
 
     <Button
@@ -26,7 +39,7 @@
             android:text="@string/restore_button_text"
             app:layout_constraintLeft_toRightOf="@id/backup_button"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@id/toolbar"/>
 
 
     <Button

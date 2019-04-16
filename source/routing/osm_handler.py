@@ -13,11 +13,12 @@ class OsmHandler(object):
 
     def __init__(self, db_client):
         self.db_client = db_client
+        self.create_indexes()
 
+    def create_indexes(self):
         self.db_client.nodes.create_index([('loc', pymongo.GEO2D)])
         self.db_client.nodes.create_index([('id', pymongo.ASCENDING), ('version', pymongo.DESCENDING)])
-
-        self.db_client.ways.create_index([('loc', pymongo.GEO2D)])
+        self.db_client.ways.create_index([('tags.highway', pymongo.ASCENDING)])
         self.db_client.ways.create_index([('id', pymongo.ASCENDING), ('version', pymongo.DESCENDING)])
 
     def fill_default(self, attrs):
@@ -64,7 +65,10 @@ class OsmHandler(object):
                 elif name == 'way':
                     # Insert remaining nodes
                     if len(nodes) > 0:
-                        self.db_client.nodes.insert_many(nodes)
+                        try:
+                            self.db_client.nodes.insert_many(nodes, ordered=False)
+                        except pymongo.errors.BulkWriteError:
+                            print('>>> Есть дубликаты узлов, но всё норм')
                         nodes = []
 
                     record = self.fill_default(attrs)
@@ -84,7 +88,10 @@ class OsmHandler(object):
                         del record['tags']
                     nodes.append(record)
                     if len(nodes) > 2500:
-                        self.db_client.nodes.insert_many(nodes)
+                        try:
+                            self.db_client.nodes.insert_many(nodes, ordered=False)
+                        except pymongo.errors.BulkWriteError:
+                            print('>>> Есть дубликаты путей, но всё норм')
                         nodes = []
                     record = {}
                 elif name == 'way':
@@ -103,7 +110,10 @@ class OsmHandler(object):
 
                     ways.append(record)
                     if len(ways) > 2000:
-                        self.db_client.ways.insert_many(ways)
+                        try:
+                            self.db_client.ways.insert_many(ways, ordered=False)
+                        except pymongo.errors.BulkWriteError:
+                            print('>>> Есть дубликаты путей, но всё норм')
                         ways = []
 
                     record = {}
@@ -112,6 +122,35 @@ class OsmHandler(object):
             elem.clear()
             root.clear()
         return bounds
+
+    def create_backup(self, bounds, path=os.path.join('..', 'settings', 'backup.json')):
+        nodes = list(self.db_client.nodes.find({}))
+        ways = list(self.db_client.ways.find({}))
+        backup = {
+            'bounds': bounds,
+            'nodes': nodes,
+            'ways': ways
+        }
+        with open(path, "w", encoding='utf-8') as write_file:
+            json.dump(backup, write_file, indent=4, ensure_ascii=False)
+
+    def load_backup(self, path=os.path.join('..', 'settings', 'backup.json')):
+        self.db_client.nodes.drop()    # удаление прошлых данных из БД
+        self.db_client.ways.drop()
+        with open(path, "r", encoding='utf-8') as read_file:
+            backup = json.load(read_file)
+        nodes = backup['nodes']
+        ways = backup['ways']
+        offset = 0
+        while offset < len(nodes):
+            self.db_client.nodes.insert_many(nodes[offset:offset + 1000])
+            offset = offset + 1000
+        offset = 0
+        while offset < len(ways):
+            self.db_client.ways.insert_many(ways[offset:offset + 1000])
+            offset = offset + 1000
+        self.create_indexes()
+        return backup['bounds']
 
 
 if __name__ == "__main__":

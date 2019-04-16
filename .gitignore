@@ -2,3 +2,5 @@
 resources
 __pycache__
 source/main.py
+settings/config.json
+settings/backup.json

@@ -10,7 +10,7 @@ class Graph(AStar):
         self.db_client = client
         self.tags = ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
                      'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential']
-        self.count_neigh = {}
+        self.neigh_ways = {}
 
     def add_neighbor(self, way_id, id_from, id_to, nodes, oneway_flag):
         """
@@ -55,6 +55,27 @@ class Graph(AStar):
                 }
             )
 
+    def find_nearest(self, point):
+        min = 0
+        max = 0.10
+        while True:
+            nearest = list(self.db_client.nodes.find({
+                'loc':
+                    {
+                        '$near': point,
+                        '$minDistance': min,
+                        '$maxDistance': max
+                    }
+            }, {'_id': 1, 'loc': 1}).limit(100))
+            for node in nearest:
+                if 'neighbors' in node:
+                    return node
+                tmp = self.db_client.ways.find_one({'tags.highway': {'$in': self.tags}, 'nodes.node_id': node['_id']})
+                if tmp:
+                    return node
+            min = max
+            max = max + 0.1
+
     def distance_between(self, node_id1, node_id2):
         """
         Расстояние между двумя узлами-соседями графа
@@ -83,7 +104,7 @@ class Graph(AStar):
                 return []
         else:
             neighbors = self.find_all_neigh(node_info)  # поиск всех соседей, если они не найдены
-            self.db_client.nodes.update_one({'_id': node}, {'$set': {'to_flag': True}})  # отметка о всех соседях
+            self.db_client.nodes.update_one({'_id': node}, {'$set': {'to_flag': True}})  # отметка о всех соседях)
             return neighbors
 
     def find_all_neigh(self, node_info):
@@ -92,10 +113,15 @@ class Graph(AStar):
         :param node_info: данные об узле {'_id', 'loc', 'neighbors'}
         :return: list(str) - список всех соседей узла
         """
+        if node_info['_id'] in self.neigh_ways:
+            ways = self.neigh_ways[node_info['_id']]
+        else:
+            ways = list(
+                self.db_client.ways.find({'tags.highway': {'$in': self.tags}, 'nodes.node_id': node_info['_id']},
+                                         {'_id': 1, 'nodes': 1,
+                                          'tags': 1}))  # найти все учитываемые пути, содержащие этот узел
+            self.neigh_ways[node_info['_id']] = ways
 
-        ways = list(self.db_client.ways.find({'tags.highway': {'$in': self.tags}, 'nodes.node_id': node_info['_id']},
-                                             {'_id': 1, 'nodes': 1,
-                                              'tags': 1}))  # найти все учитываемые пути, содержащие этот узел
         neighbors = []
         for cur_way in ways:  # проанализировать каждый путь
             oneway_flag = 'oneway' in cur_way['tags']  # если односторонее движение (понадобится позже)
@@ -126,13 +152,14 @@ class Graph(AStar):
         for i, cur_node in enumerate(nodes[1::]):  # начало со следующего от главного узла
             if 'neighbors' in node and str(cur_node['node_id']) in node['neighbors']:
                 return None  # если текущий узел уже записан - конец
-            if cur_node['node_id'] in self.count_neigh:
-                count_ways = self.count_neigh[cur_node['node_id']]  # сохранённое кол-во соседей узла
-            else:  # поиск кол-ва соседей, если не записано
-                count_ways = self.db_client.ways.count_documents(
-                    {'_id': {'$ne': way_id}, 'nodes': cur_node, 'tags.highway': {'$in': self.tags}})
-                self.count_neigh[cur_node['node_id']] = count_ways
-            if count_ways > 0 or i == len(nodes) - 2:
+
+            if cur_node['node_id'] not in self.neigh_ways:
+                self.neigh_ways[cur_node['node_id']] = list(self.db_client.ways.find(
+                    {'nodes': cur_node, 'tags.highway': {'$in': self.tags}}))  # удалено '_id': {'$ne': way_id},
+            ways = []
+            for a in self.neigh_ways[cur_node['node_id']]:  # сохранённые инцидентные пути
+                ways.append(a) if a['_id'] is not way_id else None  # без текущего пути
+            if len(ways) > 0 or i == len(nodes) - 2:
                 # найдена новая вершина - записать соседа и просчитать длину ребра
                 self.add_neighbor(way_id, node['_id'], cur_node['node_id'], nodes[:i + 2], oneway_flag)
                 return str(cur_node['node_id'])  # если найден сосед - выход
@@ -183,6 +210,33 @@ class Graph(AStar):
                                                  }
                                          }
                                          )
+
+    def clarify_path_to_loc(self, path):
+        """
+        Уточнение пути в координатах (добавление промежуточных узлов)
+        :param path: путь из перекрестков
+        :return: полный путь
+        """
+        full_path = []
+        for i, node in enumerate(path):
+            tmp = self.db_client.nodes.find_one({'_id': node})
+            if i == len(path) - 1:
+                full_path.append({'lat': tmp['loc'][0], 'lon': tmp['loc'][1]})
+                break
+            tmp1 = self.db_client.nodes.find_one({'_id': path[i + 1]})
+            way_nodes = self.db_client.ways.find_one({'_id': tmp['neighbors'][str(tmp1['_id'])]['way']}, {'nodes': 1})[
+                'nodes']
+            index = way_nodes.index({'node_id': tmp['_id'], 'loc': tmp['loc']})
+            index1 = way_nodes.index({'node_id': tmp1['_id'], 'loc': tmp1['loc']})
+            if index < index1:
+                nodes = way_nodes[index:index1+1]
+            else:
+                nodes = way_nodes[index:index1-1:-1]
+            for tmp_node in nodes:
+                if tmp_node['node_id'] == path[i + 1]:
+                    break
+                full_path.append({'lat': tmp_node['loc'][0], 'lon': tmp_node['loc'][1]})
+        return full_path
 
 
 def haversine(point1, point2):

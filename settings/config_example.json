@@ -1,0 +1,19 @@
+{
+    "server_info": {
+        "IP": "",
+        "port": 0
+    },
+    "bounds": [
+        {
+            "minlat": "",
+            "minlon": "",
+            "maxlat": "",
+            "maxlon": ""
+        }
+    ],
+    "backup_info": {
+        "exist": false,
+        "path": "",
+        "date": ""
+    }
+}

@@ -2,18 +2,25 @@ package com.dd.routing
 
 
 import android.content.Intent
+import android.graphics.Color
 import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
+import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -22,6 +29,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
@@ -72,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
             override fun longPressHelper(p: GeoPoint?): Boolean {
                 val marker = Marker(map)
-                if(markers.size == 2) {
+                if (markers.size == 2) {
                     map.overlays.remove(markers[0])
                     markers.removeAt(0)
                 }
@@ -160,6 +168,61 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+
+
+        directions_button.setOnClickListener {
+            val url =
+                "http://80.240.18.20:9000/api/0.5/fullroute/${markers.first().position.latitude},${markers.first().position.longitude},${markers.last().position.latitude},${markers.last().position.longitude} "
+            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+                Response.Listener { response ->
+                    drawWays(response)
+
+                },
+                Response.ErrorListener { error ->
+                    Response.ErrorListener {
+                        Log.d("Request", error.message)
+                    }
+                }
+            )
+            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+        }
+    }
+
+    private fun drawWays(json: JSONObject) {
+        Toast.makeText(this, "Прилетело", Toast.LENGTH_SHORT).show()
+        val rightWayJSON = json.getJSONArray("path_right")
+        val rightWayPoints = ArrayList<GeoPoint>()
+        for (i in 0 until rightWayJSON.length()) {
+            rightWayPoints.add(
+                GeoPoint(
+                    rightWayJSON.getJSONObject(i).getDouble("lat"),
+                    rightWayJSON.getJSONObject(i).getDouble("lon")
+                )
+            )
+        }
+        val rightWayPolyline = Polyline()
+        rightWayPolyline.setPoints(rightWayPoints)
+        rightWayPolyline.color = Color.RED
+
+
+        val leftWayJSON = json.getJSONArray("path_left")
+        val leftWayPoints = ArrayList<GeoPoint>()
+        for (i in 0 until leftWayJSON.length()) {
+            leftWayPoints.add(
+                GeoPoint(
+                    leftWayJSON.getJSONObject(i).getDouble("lat"),
+                    leftWayJSON.getJSONObject(i).getDouble("lon")
+                )
+            )
+        }
+        val leftWayPolyline = Polyline()
+        leftWayPolyline.setPoints(leftWayPoints)
+        leftWayPolyline.color = Color.BLUE
+
+
+        map.overlayManager.add(rightWayPolyline)
+        map.overlayManager.add(leftWayPolyline)
+        map.invalidate()
     }
 
 

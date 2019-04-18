@@ -53,5 +53,5 @@
             android:id="@+id/refresh_button"
             android:src="@drawable/ic_refresh_black"
             app:backgroundTint="#ffffff"/>
-    
+
 </androidx.constraintlayout.widget.ConstraintLayout>

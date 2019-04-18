@@ -12,6 +12,7 @@ class VolleyQueue constructor(context: Context) {
     companion object {
         @Volatile
         private var INSTANCE: VolleyQueue? = null
+
         fun getInstance(context: Context) =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: VolleyQueue(context).also {
@@ -19,6 +20,7 @@ class VolleyQueue constructor(context: Context) {
                 }
             }
     }
+
     val imageLoader: ImageLoader by lazy {
         ImageLoader(requestQueue,
             object : ImageLoader.ImageCache {
@@ -26,6 +28,7 @@ class VolleyQueue constructor(context: Context) {
                 override fun getBitmap(url: String): Bitmap {
                     return cache.get(url)
                 }
+
                 override fun putBitmap(url: String, bitmap: Bitmap) {
                     cache.put(url, bitmap)
                 }
@@ -36,6 +39,7 @@ class VolleyQueue constructor(context: Context) {
         // Activity or BroadcastReceiver if someone passes one in.
         Volley.newRequestQueue(context.applicationContext)
     }
+
     fun <T> addToRequestQueue(req: Request<T>) {
         requestQueue.add(req)
     }

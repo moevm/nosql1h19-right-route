@@ -10,6 +10,8 @@ import kotlinx.android.synthetic.main.activity_main_content.map
 import kotlinx.android.synthetic.main.activity_main_content.search_view
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 
 class AvailableAreaActivity : AppCompatActivity() {
 
@@ -23,6 +25,11 @@ class AvailableAreaActivity : AppCompatActivity() {
         map.apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+            minZoomLevel = 3.0
+            maxZoomLevel = 20.0
+            controller.setZoom(5.0)
+            controller.setCenter(GeoPoint(59.991149, 30.318757))
+            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
 
 
@@ -35,6 +42,11 @@ class AvailableAreaActivity : AppCompatActivity() {
             )
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
+        setListeners()
+    }
+
+
+    private fun setListeners() {
         back_button.setOnClickListener {
             onBackPressed()
         }

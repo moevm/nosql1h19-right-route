@@ -68,9 +68,12 @@ class MainActivity : AppCompatActivity() {
             )
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
+
         // Отображает местоположение
         val provider = GpsMyLocationProvider(this)
         provider.addLocationSource(LocationManager.GPS_PROVIDER)
+        //provider.addLocationSource(LocationManager.NETWORK_PROVIDER)
+        //provider.addLocationSource(LocationManager.PASSIVE_PROVIDER)
         locationOverlay = MyLocationNewOverlay(provider, map)
         locationOverlay.enableMyLocation()
         map.overlays.add(locationOverlay)
@@ -160,10 +163,10 @@ class MainActivity : AppCompatActivity() {
             if (locationOverlay.isMyLocationEnabled) {
                 map.zoomToBoundingBox(
                     BoundingBox(
-                        location.latitude + 0.05,
-                        location.longitude + 0.05,
-                        location.latitude - 0.05,
-                        location.longitude - 0.05
+                        location.latitude + 0.02,
+                        location.longitude + 0.02,
+                        location.latitude - 0.02,
+                        location.longitude - 0.02
                     ), true
                 )
             }

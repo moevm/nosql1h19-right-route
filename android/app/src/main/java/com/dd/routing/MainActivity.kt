@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity() {
 
         directions_button.setOnClickListener {
             val url =
-                "http://80.240.18.20:9000/api/0.5/fullroute/${markers.first().position.latitude},${markers.first().position.longitude},${markers.last().position.latitude},${markers.last().position.longitude} "
+                "${VolleyQueue.serverUrl}/api/0.5/fullroute/${markers.first().position.latitude},${markers.first().position.longitude},${markers.last().position.latitude},${markers.last().position.longitude} "
             val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
                 Response.Listener { response ->
                     drawWays(response)

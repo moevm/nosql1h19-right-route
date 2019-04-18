@@ -9,9 +9,12 @@ import com.android.volley.toolbox.ImageLoader
 import com.android.volley.toolbox.Volley
 
 class VolleyQueue constructor(context: Context) {
+
+
     companion object {
         @Volatile
         private var INSTANCE: VolleyQueue? = null
+        const val serverUrl = "http://80.240.18.20:9000"
 
         fun getInstance(context: Context) =
             INSTANCE ?: synchronized(this) {
@@ -34,6 +37,7 @@ class VolleyQueue constructor(context: Context) {
                 }
             })
     }
+
     val requestQueue: RequestQueue by lazy {
         // applicationContext is key, it keeps you from leaking the
         // Activity or BroadcastReceiver if someone passes one in.

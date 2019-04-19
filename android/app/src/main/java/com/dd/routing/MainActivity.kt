@@ -32,6 +32,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -69,15 +70,7 @@ class MainActivity : AppCompatActivity() {
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
 
-        // Отображает местоположение
-        val provider = GpsMyLocationProvider(this)
-        provider.addLocationSource(LocationManager.GPS_PROVIDER)
-        //provider.addLocationSource(LocationManager.NETWORK_PROVIDER)
-        //provider.addLocationSource(LocationManager.PASSIVE_PROVIDER)
-        locationOverlay = MyLocationNewOverlay(provider, map)
-        locationOverlay.enableMyLocation()
-        map.overlays.add(locationOverlay)
-
+        showLocation()
 
         // Map events overlay
         val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
@@ -121,16 +114,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, AboutActivity::class.java))
                 }
                 R.id.nav_exit -> {
-                    AlertDialog.Builder(this)
-                        .setMessage(R.string.exit_dialog_text)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.yes) { _, _ ->
-                            finishAffinity()
-                        }.setNegativeButton(R.string.no, null)
-                        .show()
+                    showExitDialog()
                 }
             }
-            drawer_layout.closeDrawers()
+            //drawer_layout.closeDrawers()
             true
         }
 
@@ -161,17 +148,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         location_button.setOnClickListener {
-            val location = locationOverlay.myLocation
-            if (locationOverlay.isMyLocationEnabled) {
-                map.zoomToBoundingBox(
-                    BoundingBox(
-                        location.latitude + 0.02,
-                        location.longitude + 0.02,
-                        location.latitude - 0.02,
-                        location.longitude - 0.02
-                    ), true
-                )
+            try {
+                val location = locationOverlay.myLocation
+                if (locationOverlay.isMyLocationEnabled) {
+                    map.zoomToBoundingBox(
+                        BoundingBox(
+                            location.latitude + 0.02,
+                            location.longitude + 0.02,
+                            location.latitude - 0.02,
+                            location.longitude - 0.02
+                        ), true
+                    )
+                }
+            } catch (e: Exception) {
+                showLocation()
             }
+
         }
 
 
@@ -248,5 +240,36 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         map.onPause()
+    }
+
+    override fun onBackPressed() {
+        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
+            drawer_layout.closeDrawers()
+        } else {
+            showExitDialog()
+        }
+    }
+
+    private fun showExitDialog() {
+        AlertDialog.Builder(this)
+            .setMessage(R.string.exit_dialog_text)
+            .setCancelable(false)
+            .setPositiveButton(R.string.yes) { _, _ ->
+                finishAffinity()
+            }.setNegativeButton(R.string.no, null)
+            .show()
+    }
+
+    private fun showLocation() {
+        if(::locationOverlay.isInitialized) {
+            map.overlays.remove(locationOverlay)
+        }
+        val provider = GpsMyLocationProvider(this)
+        provider.addLocationSource(LocationManager.GPS_PROVIDER)
+        //provider.addLocationSource(LocationManager.NETWORK_PROVIDER)
+        //provider.addLocationSource(LocationManager.PASSIVE_PROVIDER)
+        locationOverlay = MyLocationNewOverlay(provider, map)
+        locationOverlay.enableMyLocation()
+        map.overlays.add(locationOverlay)
     }
 }

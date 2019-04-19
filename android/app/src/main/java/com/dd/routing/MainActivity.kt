@@ -88,6 +88,8 @@ class MainActivity : AppCompatActivity() {
                     markers.removeAt(0)
                 }
                 markers.add(marker)
+                markers.first().title = "Start"
+                markers.last().title = "End"
                 marker.position = p
                 marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 map.overlays.add(marker)
@@ -174,9 +176,16 @@ class MainActivity : AppCompatActivity() {
 
 
         directions_button.setOnClickListener {
-            val url =
-                "${VolleyQueue.serverUrl}/api/0.5/fullroute/${markers.first().position.latitude},${markers.first().position.longitude},${markers.last().position.latitude},${markers.last().position.longitude} "
-            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+            if (markers.size < 2) {
+                return@setOnClickListener
+            }
+            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
+            urlBuilder.append("/api/0.5/fullroute")
+                .append("?lat1=${markers.first().position.latitude}")
+                .append("&lon1=${markers.first().position.longitude}")
+                .append("&lat2=${markers.last().position.latitude}")
+                .append("&lon2=${markers.last().position.longitude}")
+            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
                 Response.Listener { response ->
                     drawWays(response)
 
@@ -206,6 +215,7 @@ class MainActivity : AppCompatActivity() {
         val rightWayPolyline = Polyline()
         rightWayPolyline.setPoints(rightWayPoints)
         rightWayPolyline.color = Color.RED
+        rightWayPolyline.width = 8.0f
 
 
         val leftWayJSON = json.getJSONArray("path_left")
@@ -221,10 +231,11 @@ class MainActivity : AppCompatActivity() {
         val leftWayPolyline = Polyline()
         leftWayPolyline.setPoints(leftWayPoints)
         leftWayPolyline.color = Color.BLUE
+        leftWayPolyline.width = 15.0f
 
 
-        map.overlayManager.add(rightWayPolyline)
         map.overlayManager.add(leftWayPolyline)
+        map.overlayManager.add(rightWayPolyline)
         map.invalidate()
     }
 

@@ -163,7 +163,6 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 showLocation()
             }
-
         }
 
 
@@ -266,10 +265,9 @@ class MainActivity : AppCompatActivity() {
         }
         val provider = GpsMyLocationProvider(this)
         provider.addLocationSource(LocationManager.GPS_PROVIDER)
-        //provider.addLocationSource(LocationManager.NETWORK_PROVIDER)
-        //provider.addLocationSource(LocationManager.PASSIVE_PROVIDER)
         locationOverlay = MyLocationNewOverlay(provider, map)
         locationOverlay.enableMyLocation()
         map.overlays.add(locationOverlay)
+        map.invalidate()
     }
 }

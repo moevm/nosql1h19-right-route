@@ -1,6 +1,7 @@
 package com.dd.routing
 
 import android.graphics.Color
+import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
@@ -16,13 +17,18 @@ import kotlinx.android.synthetic.main.activity_main_content.search_view
 import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.lang.Exception
 
 class AvailableAreaActivity : AppCompatActivity() {
 
-    val areas = ArrayList<Polygon>()
+    private val areas = ArrayList<Polygon>()
+    lateinit var locationOverlay: MyLocationNewOverlay
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,5 +110,39 @@ class AvailableAreaActivity : AppCompatActivity() {
         refresh_button.setOnClickListener {
             displayAvailableArea()
         }
+
+        location_button.setOnClickListener {
+            try {
+                val location = locationOverlay.myLocation
+                if (locationOverlay.isMyLocationEnabled) {
+                    map.zoomToBoundingBox(
+                        BoundingBox(
+                            location.latitude + 0.02,
+                            location.longitude + 0.02,
+                            location.latitude - 0.02,
+                            location.longitude - 0.02
+                        ), true
+                    )
+                }
+            } catch (e: Exception) {
+                showLocation()
+            }
+        }
+    }
+
+
+    private fun showLocation() {
+        if(::locationOverlay.isInitialized) {
+            if(locationOverlay.isMyLocationEnabled) {
+                return
+            }
+            map.overlays.remove(locationOverlay)
+        }
+        val provider = GpsMyLocationProvider(this)
+        provider.addLocationSource(LocationManager.GPS_PROVIDER)
+        locationOverlay = MyLocationNewOverlay(provider, map)
+        locationOverlay.enableMyLocation()
+        map.overlays.add(locationOverlay)
+        map.invalidate()
     }
 }

@@ -23,7 +23,6 @@ import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.lang.Exception
 
 class AvailableAreaActivity : AppCompatActivity() {
 
@@ -99,6 +98,24 @@ class AvailableAreaActivity : AppCompatActivity() {
             map.overlayManager.add(polygon)
             map.invalidate()
         }
+        zoomToAvailableArea()
+    }
+
+    private fun zoomToAvailableArea() {
+        if (areas.isEmpty()) {
+            return
+        }
+        val points = areas.flatMap { polygon ->
+            polygon.points
+        }
+        map.zoomToBoundingBox(
+            BoundingBox(
+                points.maxBy { it.latitude }!!.latitude,
+                points.maxBy { it.longitude }!!.longitude,
+                points.minBy { it.latitude }!!.latitude,
+                points.minBy { it.longitude }!!.longitude
+            ), true
+        )
     }
 
 
@@ -132,8 +149,8 @@ class AvailableAreaActivity : AppCompatActivity() {
 
 
     private fun showLocation() {
-        if(::locationOverlay.isInitialized) {
-            if(locationOverlay.isMyLocationEnabled) {
+        if (::locationOverlay.isInitialized) {
+            if (locationOverlay.isMyLocationEnabled) {
                 return
             }
             map.overlays.remove(locationOverlay)

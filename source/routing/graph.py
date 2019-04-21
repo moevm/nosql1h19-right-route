@@ -10,6 +10,12 @@ class Graph(AStar):
         self.db_client = client
         self.tags = ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
                      'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential']
+        self.str_tags = ''
+        for tag in self.tags:
+            if tag == self.tags[-1]:
+                self.str_tags = self.str_tags + tag
+            else:
+                self.str_tags = self.str_tags + tag + '|'
         self.neigh_ways = {}
 
     def add_neighbor(self, way_id, id_from, id_to, nodes, oneway_flag):
@@ -56,25 +62,26 @@ class Graph(AStar):
             )
 
     def find_nearest(self, point):
-        min = 0
-        max = 0.10
-        while True:
-            nearest = list(self.db_client.nodes.find({
-                'loc':
-                    {
-                        '$near': point,
-                        '$minDistance': min,
-                        '$maxDistance': max
-                    }
-            }, {'_id': 1, 'loc': 1}).limit(100))
-            for node in nearest:
-                if 'neighbors' in node:
-                    return node
-                tmp = self.db_client.ways.find_one({'tags.highway': {'$in': self.tags}, 'nodes.node_id': node['_id']})
-                if tmp:
-                    return node
-            min = max
-            max = max + 0.1
+        import overpy
+        import numpy as np
+        api = overpy.Overpass()
+        # заменить на строку
+        dist = 50
+        result = overpy.Result()
+        while not result.ways:
+            result = api.query(f"""[out:json];way["highway"~"{self.str_tags}"](around:{dist},{point[0]},{point[1]});out;""")
+            dist = dist + 50
+        first_way = self.db_client.ways.find_one({"_id": result.ways[0].id}, {"nodes": 1})  # полученные узлов пути
+        min1 = dict(id=first_way['nodes'][0]['node_id'], loc=first_way['nodes'][0]['loc'], dist=haversine(point, first_way['nodes'][0]['loc']))
+        for way in result.ways:
+            tmp_way = self.db_client.ways.find_one({"_id": way.id}, {"nodes": 1})     # полученные узлов пути
+            nodes = tmp_way['nodes'] if tmp_way else []
+            for node in nodes:
+                dist = haversine(point, node['loc'])
+                if dist < min1['dist']:
+                    min1['id'] = node['node_id']
+                    min1['dist'] = dist
+        return min1['id']
 
     def distance_between(self, node_id1, node_id2):
         """
@@ -155,11 +162,11 @@ class Graph(AStar):
 
             if cur_node['node_id'] not in self.neigh_ways:
                 self.neigh_ways[cur_node['node_id']] = list(self.db_client.ways.find(
-                    {'nodes': cur_node, 'tags.highway': {'$in': self.tags}}))  # удалено '_id': {'$ne': way_id},
+                    {'tags.highway': {'$in': self.tags}, 'nodes': cur_node}))  # удалено '_id': {'$ne': way_id},
             ways = []
             for a in self.neigh_ways[cur_node['node_id']]:  # сохранённые инцидентные пути
                 ways.append(a) if a['_id'] is not way_id else None  # без текущего пути
-            if len(ways) > 0 or i == len(nodes) - 2:
+            if len(ways) > 0 or (i == len(nodes) - 2 and len(ways) == 0):
                 # найдена новая вершина - записать соседа и просчитать длину ребра
                 self.add_neighbor(way_id, node['_id'], cur_node['node_id'], nodes[:i + 2], oneway_flag)
                 return str(cur_node['node_id'])  # если найден сосед - выход
@@ -220,7 +227,7 @@ class Graph(AStar):
         full_path = []
         for i, node in enumerate(path):
             tmp = self.db_client.nodes.find_one({'_id': node})
-            if i == len(path) - 1:
+            if node == path[-1]:
                 full_path.append({'lat': tmp['loc'][0], 'lon': tmp['loc'][1]})
                 break
             tmp1 = self.db_client.nodes.find_one({'_id': path[i + 1]})

@@ -101,32 +101,34 @@ class AStar:
                 if current.came_from:
                     prev = nodes_client_for_left.find_one({'_id': current.came_from.data}, {'loc': 1})
 
-            for neighbor in [searchNodes[int(n)] for n in self.neighbors(current.data)]:
+            neighbors = [searchNodes[int(n)] for n in self.neighbors(current.data)]
+            for neighbor in neighbors:
                 if neighbor.closed:
                     continue
 
                 # поиск поворотов налево/разворотов
                 if nodes_client_for_left:
-                    new = nodes_client_for_left.find_one({'_id': neighbor.data}, {'loc': 1})
-                    prev_vector = [cur['loc'][1] - prev['loc'][1], cur['loc'][0] - prev['loc'][0]]
-                    tmp_vector = [new['loc'][1] - prev['loc'][1], new['loc'][0] - prev['loc'][0]]
-                    new_vector = [new['loc'][1] - cur['loc'][1], new['loc'][0] - cur['loc'][0]]
+                    if len(neighbors) > 1:  # если сосед один - не искать поворот
+                        new = nodes_client_for_left.find_one({'_id': neighbor.data}, {'loc': 1})
+                        prev_vector = [cur['loc'][1] - prev['loc'][1], cur['loc'][0] - prev['loc'][0]]
+                        tmp_vector = [new['loc'][1] - prev['loc'][1], new['loc'][0] - prev['loc'][0]]
+                        new_vector = [new['loc'][1] - cur['loc'][1], new['loc'][0] - cur['loc'][0]]
 
-                    import numpy as np
+                        import numpy as np
 
-                    cos = 1
-                    if current.came_from:
-                        cos = np.dot(prev_vector, new_vector) / (np.linalg.norm(prev_vector) * np.linalg.norm(new_vector))
-                        cos = np.clip(cos, -1, 1)  # угол между векторами движения
-                    ang = np.degrees(np.arccos(np.clip(cos, -1, 1)))
-                    tmp = float(np.cross(prev_vector, tmp_vector))  # для определения с какой стороны точка
-                    if tmp > 0:
-                        # новая точка слева от вектора движения
-                        # fixme критерии не идеальны
-                        if 45.0 <= ang < 140.0:     # левый поворот
-                            continue
-                        if 140.0 <= ang <= 180.0:       # разворот
-                            continue
+                        cos = 1
+                        if current.came_from:
+                            cos = np.dot(prev_vector, new_vector) / (np.linalg.norm(prev_vector) * np.linalg.norm(new_vector))
+                            cos = np.clip(cos, -1, 1)  # угол между векторами движения
+                        ang = np.degrees(np.arccos(np.clip(cos, -1, 1)))
+                        tmp = float(np.cross(prev_vector, tmp_vector))  # для определения с какой стороны точка
+                        if tmp > 0:
+                            # новая точка слева от вектора движения
+                            # fixme критерии не идеальны
+                            if 45.0 <= ang < 140.0:     # левый поворот
+                                continue
+                            if 140.0 <= ang <= 180.0:       # разворот
+                                continue
 
                 tentative_gscore = current.gscore + self.distance_between(current.data, neighbor.data)
                 if tentative_gscore >= neighbor.gscore:

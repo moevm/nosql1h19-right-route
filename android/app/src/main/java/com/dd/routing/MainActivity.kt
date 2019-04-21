@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
 
-        //TODO: remove underline in search
+
         // Удаляет иконку поиска из поисковой строки
         (search_view.findViewById(
             resources.getIdentifier(
@@ -147,6 +147,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         menu_button.setOnClickListener {
+            search_view.clearFocus()
             drawer_layout.openDrawer(GravityCompat.START)
         }
 

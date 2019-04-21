@@ -6,6 +6,7 @@
     <string name="nav_about_title">About</string>
     <string name="nav_exit_title">Exit</string>
     <string name="menu_button_description">Menu</string>
+    <string name="close_button_description">Delete markers</string>
     <string name="search_query_hint">Search maps</string>
     <string name="exit_dialog_text">Do you really want to exit?</string>
     <string name="yes">Yes</string>

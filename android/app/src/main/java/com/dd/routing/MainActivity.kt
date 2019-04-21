@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.transition.Visibility
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -32,7 +33,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -70,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
 
-        showLocation()
 
         // Map events overlay
         val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
@@ -87,7 +86,8 @@ class MainActivity : AppCompatActivity() {
                 marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 map.overlays.add(marker)
                 map.invalidate()
-                return true
+                close_button.visibility = View.VISIBLE
+                    return true
             }
 
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -97,6 +97,9 @@ class MainActivity : AppCompatActivity() {
         map.overlays.add(mapEventsOverlay)
 
 
+
+
+        showLocation()
         setListeners() // Устанавлеваем слушатели на все
     }
 
@@ -117,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                     showExitDialog()
                 }
             }
-            //drawer_layout.closeDrawers()
+            drawer_layout.closeDrawers()
             true
         }
 
@@ -188,6 +191,15 @@ class MainActivity : AppCompatActivity() {
                 }
             )
             VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+        }
+
+        close_button.setOnClickListener {
+            markers.forEach {marker ->
+                map.overlays.remove(marker)
+            }
+            markers.clear()
+            map.invalidate()
+            it.visibility = View.GONE
         }
     }
 
@@ -260,7 +272,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLocation() {
-        if(::locationOverlay.isInitialized) {
+        if (::locationOverlay.isInitialized) {
             map.overlays.remove(locationOverlay)
         }
         val provider = GpsMyLocationProvider(this)

@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.transition.Visibility
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -69,15 +70,6 @@ class MainActivity : AppCompatActivity() {
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
 
-        // Отображает местоположение
-        val provider = GpsMyLocationProvider(this)
-        provider.addLocationSource(LocationManager.GPS_PROVIDER)
-        //provider.addLocationSource(LocationManager.NETWORK_PROVIDER)
-        //provider.addLocationSource(LocationManager.PASSIVE_PROVIDER)
-        locationOverlay = MyLocationNewOverlay(provider, map)
-        locationOverlay.enableMyLocation()
-        map.overlays.add(locationOverlay)
-
 
         // Map events overlay
         val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
@@ -88,11 +80,14 @@ class MainActivity : AppCompatActivity() {
                     markers.removeAt(0)
                 }
                 markers.add(marker)
+                markers.first().title = "Start"
+                markers.last().title = "End"
                 marker.position = p
                 marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 map.overlays.add(marker)
                 map.invalidate()
-                return true
+                close_button.visibility = View.VISIBLE
+                    return true
             }
 
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -102,6 +97,9 @@ class MainActivity : AppCompatActivity() {
         map.overlays.add(mapEventsOverlay)
 
 
+
+
+        showLocation()
         setListeners() // Устанавлеваем слушатели на все
     }
 
@@ -119,13 +117,7 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, AboutActivity::class.java))
                 }
                 R.id.nav_exit -> {
-                    AlertDialog.Builder(this)
-                        .setMessage(R.string.exit_dialog_text)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.yes) { _, _ ->
-                            finishAffinity()
-                        }.setNegativeButton(R.string.no, null)
-                        .show()
+                    showExitDialog()
                 }
             }
             drawer_layout.closeDrawers()
@@ -159,24 +151,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         location_button.setOnClickListener {
-            val location = locationOverlay.myLocation
-            if (locationOverlay.isMyLocationEnabled) {
-                map.zoomToBoundingBox(
-                    BoundingBox(
-                        location.latitude + 0.02,
-                        location.longitude + 0.02,
-                        location.latitude - 0.02,
-                        location.longitude - 0.02
-                    ), true
-                )
+            try {
+                val location = locationOverlay.myLocation
+                if (locationOverlay.isMyLocationEnabled) {
+                    map.zoomToBoundingBox(
+                        BoundingBox(
+                            location.latitude + 0.02,
+                            location.longitude + 0.02,
+                            location.latitude - 0.02,
+                            location.longitude - 0.02
+                        ), true
+                    )
+                }
+            } catch (e: Exception) {
+                showLocation()
             }
         }
 
 
         directions_button.setOnClickListener {
-            val url =
-                "http://80.240.18.20:9000/api/0.5/fullroute/${markers.first().position.latitude},${markers.first().position.longitude},${markers.last().position.latitude},${markers.last().position.longitude} "
-            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+            if (markers.size < 2) {
+                return@setOnClickListener
+            }
+            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
+            urlBuilder.append("/api/0.5/fullroute")
+                .append("?lat1=${markers.first().position.latitude}")
+                .append("&lon1=${markers.first().position.longitude}")
+                .append("&lat2=${markers.last().position.latitude}")
+                .append("&lon2=${markers.last().position.longitude}")
+            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
                 Response.Listener { response ->
                     drawWays(response)
 
@@ -188,6 +191,15 @@ class MainActivity : AppCompatActivity() {
                 }
             )
             VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+        }
+
+        close_button.setOnClickListener {
+            markers.forEach {marker ->
+                map.overlays.remove(marker)
+            }
+            markers.clear()
+            map.invalidate()
+            it.visibility = View.GONE
         }
     }
 
@@ -206,6 +218,7 @@ class MainActivity : AppCompatActivity() {
         val rightWayPolyline = Polyline()
         rightWayPolyline.setPoints(rightWayPoints)
         rightWayPolyline.color = Color.RED
+        rightWayPolyline.width = 8.0f
 
 
         val leftWayJSON = json.getJSONArray("path_left")
@@ -221,10 +234,11 @@ class MainActivity : AppCompatActivity() {
         val leftWayPolyline = Polyline()
         leftWayPolyline.setPoints(leftWayPoints)
         leftWayPolyline.color = Color.BLUE
+        leftWayPolyline.width = 15.0f
 
 
-        map.overlayManager.add(rightWayPolyline)
         map.overlayManager.add(leftWayPolyline)
+        map.overlayManager.add(rightWayPolyline)
         map.invalidate()
     }
 
@@ -237,5 +251,35 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         map.onPause()
+    }
+
+    override fun onBackPressed() {
+        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
+            drawer_layout.closeDrawers()
+        } else {
+            showExitDialog()
+        }
+    }
+
+    private fun showExitDialog() {
+        AlertDialog.Builder(this)
+            .setMessage(R.string.exit_dialog_text)
+            .setCancelable(false)
+            .setPositiveButton(R.string.yes) { _, _ ->
+                finishAffinity()
+            }.setNegativeButton(R.string.no, null)
+            .show()
+    }
+
+    private fun showLocation() {
+        if (::locationOverlay.isInitialized) {
+            map.overlays.remove(locationOverlay)
+        }
+        val provider = GpsMyLocationProvider(this)
+        provider.addLocationSource(LocationManager.GPS_PROVIDER)
+        locationOverlay = MyLocationNewOverlay(provider, map)
+        locationOverlay.enableMyLocation()
+        map.overlays.add(locationOverlay)
+        map.invalidate()
     }
 }

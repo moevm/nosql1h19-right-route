@@ -18,8 +18,12 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -32,6 +36,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.IOException
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -148,20 +154,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         location_button.setOnClickListener {
-            if (locationOverlay.isMyLocationEnabled) {
-                val location = locationOverlay.myLocation
-                map.zoomToBoundingBox(
-                    BoundingBox(
-                        location.latitude + 0.02,
-                        location.longitude + 0.02,
-                        location.latitude - 0.02,
-                        location.longitude - 0.02
-                    ), true
-                )
-            } else {
+            try {
+                if (locationOverlay.isMyLocationEnabled) {
+                    val location = locationOverlay.myLocation
+                    map.zoomToBoundingBox(
+                        BoundingBox(
+                            location.latitude + 0.02,
+                            location.longitude + 0.02,
+                            location.latitude - 0.02,
+                            location.longitude - 0.02
+                        ), true
+                    )
+                } else {
+                    showLocation()
+                    Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e : Exception) {
                 showLocation()
-                Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
             }
+
         }
 
 
@@ -216,7 +227,37 @@ class MainActivity : AppCompatActivity() {
                 }
             )
             Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
-            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+
+
+
+            val client = OkHttpClient()
+            val request = okhttp3.Request.Builder()
+                .url(urlBuilder.toString())
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                }
+
+                override fun onResponse(call: Call, response: okhttp3.Response) {
+                    if(response.isSuccessful) {
+                        runOnUiThread {
+                            if (response.body() != null) {
+                                try {
+                                    drawWays(JSONObject(response.body()?.string()))
+                                } catch (e : Exception) {
+                                    Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
+                                }
+                            } else {
+                                Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+            })
+
+            //VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
 
         close_button.setOnClickListener {

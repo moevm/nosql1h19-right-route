@@ -15,12 +15,15 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.transition.Visibility
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -33,6 +36,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.IOException
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -59,7 +64,7 @@ class MainActivity : AppCompatActivity() {
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
 
-        //TODO: remove underline in search
+
         // Удаляет иконку поиска из поисковой строки
         (search_view.findViewById(
             resources.getIdentifier(
@@ -68,7 +73,6 @@ class MainActivity : AppCompatActivity() {
                 null
             )
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
-
 
 
         // Map events overlay
@@ -87,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                 map.overlays.add(marker)
                 map.invalidate()
                 close_button.visibility = View.VISIBLE
-                    return true
+                return true
             }
 
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -125,7 +129,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        //TODO: добавить поведение если это понадобится или просто удалить
         drawer_layout.addDrawerListener(
             object : DrawerLayout.DrawerListener {
                 override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
@@ -141,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onDrawerStateChanged(newState: Int) {
-                    // Respond when the drawer motion state changes
+                    search_view.clearFocus()
                 }
             }
         )
@@ -152,8 +155,8 @@ class MainActivity : AppCompatActivity() {
 
         location_button.setOnClickListener {
             try {
-                val location = locationOverlay.myLocation
                 if (locationOverlay.isMyLocationEnabled) {
+                    val location = locationOverlay.myLocation
                     map.zoomToBoundingBox(
                         BoundingBox(
                             location.latitude + 0.02,
@@ -162,23 +165,56 @@ class MainActivity : AppCompatActivity() {
                             location.longitude - 0.02
                         ), true
                     )
+                } else {
+                    showLocation()
+                    Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
+            } catch (e : Exception) {
                 showLocation()
             }
+
         }
 
 
         directions_button.setOnClickListener {
-            if (markers.size < 2) {
-                return@setOnClickListener
-            }
+
             val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
-            urlBuilder.append("/api/0.5/fullroute")
-                .append("?lat1=${markers.first().position.latitude}")
-                .append("&lon1=${markers.first().position.longitude}")
-                .append("&lat2=${markers.last().position.latitude}")
-                .append("&lon2=${markers.last().position.longitude}")
+            when (markers.size) {
+                0 -> {
+                    Toast.makeText(this, "Недостаточно точек", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                1 -> {
+                    if (locationOverlay.isMyLocationEnabled) {
+                        val location = locationOverlay.myLocation
+                        urlBuilder
+                            .append("/api/0.5/fullroute")
+                            .append("?lat1=${location.latitude}")
+                            .append("&lon1=${location.longitude}")
+                            .append("&lat2=${markers.last().position.latitude}")
+                            .append("&lon2=${markers.last().position.longitude}")
+
+                    } else {
+                        showLocation()
+                        Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                }
+                2 -> {
+                    urlBuilder
+                        .append("/api/0.5/fullroute")
+                        .append("?lat1=${markers.first().position.latitude}")
+                        .append("&lon1=${markers.first().position.longitude}")
+                        .append("&lat2=${markers.last().position.latitude}")
+                        .append("&lon2=${markers.last().position.longitude}")
+                }
+                else -> {
+                    Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
+
+
             val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
                 Response.Listener { response ->
                     drawWays(response)
@@ -186,15 +222,46 @@ class MainActivity : AppCompatActivity() {
                 },
                 Response.ErrorListener { error ->
                     Response.ErrorListener {
-                        Log.d("Request", error.message)
+                        Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
-            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+            Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
+
+
+
+            val client = OkHttpClient()
+            val request = okhttp3.Request.Builder()
+                .url(urlBuilder.toString())
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                }
+
+                override fun onResponse(call: Call, response: okhttp3.Response) {
+                    if(response.isSuccessful) {
+                        runOnUiThread {
+                            if (response.body() != null) {
+                                try {
+                                    drawWays(JSONObject(response.body()?.string()))
+                                } catch (e : Exception) {
+                                    Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
+                                }
+                            } else {
+                                Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+            })
+
+            //VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
 
         close_button.setOnClickListener {
-            markers.forEach {marker ->
+            markers.forEach { marker ->
                 map.overlays.remove(marker)
             }
             markers.clear()

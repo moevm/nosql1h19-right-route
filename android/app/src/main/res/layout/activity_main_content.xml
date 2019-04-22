@@ -41,8 +41,9 @@
             android:layout_marginEnd="@dimen/search_bar_side_margin"
             android:layout_marginTop="@dimen/search_bar_top_margin"
             android:layout_gravity="top"
+            android:elevation="5dp"
             android:background="@drawable/rounded_corners_white">
-        <!--TODO: elevation-->
+
         <ImageButton
                 android:layout_width="@dimen/search_bar_button_size"
                 android:layout_height="@dimen/search_bar_button_size"
@@ -62,6 +63,7 @@
                 android:id="@+id/search_view"
                 android:queryHint="@string/search_query_hint"
                 android:iconifiedByDefault="false"
+                android:queryBackground="@color/white"
                 android:focusable="false"/>
 
 

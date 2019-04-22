@@ -15,8 +15,8 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
+            android:elevation="5dp"
             android:background="@color/colorPrimary">
-        <!--TODO elevation-->
 
     </androidx.appcompat.widget.Toolbar>
 

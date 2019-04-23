@@ -221,9 +221,7 @@ class MainActivity : AppCompatActivity() {
 
                 },
                 Response.ErrorListener { error ->
-                    Response.ErrorListener {
-                        Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
                 }
             )
             Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()

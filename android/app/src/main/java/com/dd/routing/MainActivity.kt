@@ -117,6 +117,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_data -> {
                     startActivity(Intent(this, DataActivity::class.java))
                 }
+                R.id.nav_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                }
                 R.id.nav_about -> {
                     startActivity(Intent(this, AboutActivity::class.java))
                 }
@@ -220,40 +223,12 @@ class MainActivity : AppCompatActivity() {
                     drawWays(response)
 
                 },
-                Response.ErrorListener { error ->
+                Response.ErrorListener {
                     Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
                 }
             )
             Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
 
-
-
-//            val client = OkHttpClient()
-//            val request = okhttp3.Request.Builder()
-//                .url(urlBuilder.toString())
-//                .build()
-//
-//            client.newCall(request).enqueue(object : Callback {
-//                override fun onFailure(call: Call, e: IOException) {
-//                    e.printStackTrace()
-//                }
-//
-//                override fun onResponse(call: Call, response: okhttp3.Response) {
-//                    if(response.isSuccessful) {
-//                        runOnUiThread {
-//                            if (response.body() != null) {
-//                                try {
-//                                    drawWays(JSONObject(response.body()?.string()))
-//                                } catch (e : Exception) {
-//                                    Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
-//                                }
-//                            } else {
-//                                Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
-//                            }
-//                        }
-//                    }
-//                }
-//            })
 
             VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }

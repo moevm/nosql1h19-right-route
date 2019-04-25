@@ -48,7 +48,7 @@ class DataActivity : AppCompatActivity() {
         }
 
         backup_button.setOnClickListener {
-            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
+            val urlBuilder = StringBuilder(getServerUrl(this))
                 .append("/api/0.5/create_backup")
             val stringRequest = StringRequest(
                 Request.Method.GET, urlBuilder.toString(),
@@ -61,7 +61,7 @@ class DataActivity : AppCompatActivity() {
         }
 
         restore_button.setOnClickListener {
-            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
+            val urlBuilder = StringBuilder(getServerUrl(this))
                 .append("/api/0.5/load_backup")
             val stringRequest = StringRequest(
                 Request.Method.GET, urlBuilder.toString(),
@@ -75,7 +75,7 @@ class DataActivity : AppCompatActivity() {
 
         import_button.setOnClickListener {
             val boundingBox = map.boundingBox
-            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
+            val urlBuilder = StringBuilder(getServerUrl(this))
                 .append("/api/0.5/load_map")
                 .append("?min_lat=${boundingBox.latSouth}")
                 .append("&min_lon=${boundingBox.lonWest}")

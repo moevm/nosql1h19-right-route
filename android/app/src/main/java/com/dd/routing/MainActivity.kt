@@ -180,8 +180,7 @@ class MainActivity : AppCompatActivity() {
 
 
         directions_button.setOnClickListener {
-
-            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
+            val urlBuilder = StringBuilder(getServerUrl(this))
             when (markers.size) {
                 0 -> {
                     Toast.makeText(this, "Недостаточно точек", Toast.LENGTH_SHORT).show()

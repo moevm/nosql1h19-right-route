@@ -32,10 +32,21 @@
     <EditText android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:id="@+id/server_url"
-
+              android:focusable="true"
+              android:focusableInTouchMode="true"
               android:layout_margin="@dimen/default_margin"
               android:inputType="textUri"
               app:layout_constraintTop_toBottomOf="@id/server_url_label"
               tools:ignore="Autofill"/>
+
+    <Button
+            style="@style/Button"
+            android:id="@+id/save_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/default_margin"
+            android:text="@string/save_button_text"
+            app:layout_constraintTop_toBottomOf="@id/server_url"
+            app:layout_constraintLeft_toLeftOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

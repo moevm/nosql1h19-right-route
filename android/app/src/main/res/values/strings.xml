@@ -23,4 +23,5 @@
     <string name="import_button_text">Import selected area</string>
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="server_url_label">Server URL</string>
+    <string name="save_button_text">Save</string>
 </resources>

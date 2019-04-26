@@ -9,6 +9,7 @@
     <dimen name="search_bar_button_size">50dp</dimen>
     <dimen name="info_text_margin">16dp</dimen>
     <dimen name="button_margin">8dp</dimen>
+    <dimen name="default_margin">8dp</dimen>
 
 
 </resources>

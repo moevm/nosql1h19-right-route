@@ -62,7 +62,7 @@ class AvailableAreaActivity : AppCompatActivity() {
     }
 
     private fun displayAvailableArea() {
-        val url = "${VolleyQueue.serverUrl}/api/0.5/bounds"
+        val url = "${getServerUrl(this)}/api/0.5/bounds"
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, url, null,
             Response.Listener { response ->

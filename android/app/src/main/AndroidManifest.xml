@@ -2,16 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.dd.routing">
 
-
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> <!-- Location permissions -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
-
-    <!--Location permissions-->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-feature android:name="android.hardware.location.gps" />
+    <uses-feature android:name="android.hardware.location.gps"/>
 
     <application
             android:allowBackup="true"
@@ -20,8 +17,14 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme.TransparentStatusBar">
-        <activity android:name=".AvailableAreaActivity"
-                  android:parentActivityName=".MainActivity">
+        <activity
+                android:name=".SettingsActivity"
+                android:label="@string/title_activity_settings"
+                android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+                android:name=".AvailableAreaActivity"
+                android:parentActivityName=".MainActivity">
         </activity>
         <activity
                 android:name=".DataActivity"

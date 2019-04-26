@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var locationOverlay: MyLocationNewOverlay
     val markers = ArrayList<Marker>()
+    val routes = ArrayList<Polyline>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -228,7 +229,6 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 showLocation()
             }
-
         }
 
 
@@ -293,12 +293,14 @@ class MainActivity : AppCompatActivity() {
             map.invalidate()
             hidePointInfo()
             hideRoutesInfo()
+            clearRoutes()
             it.visibility = View.GONE
         }
     }
 
     private fun drawRoutes(json: JSONObject) {
         Toast.makeText(this, "Прилетело", Toast.LENGTH_SHORT).show()
+        clearRoutes()
         val rightWayJSON = json.getJSONArray("path_right")
         val rightWayPoints = ArrayList<GeoPoint>()
         for (i in 0 until rightWayJSON.length()) {
@@ -333,9 +335,18 @@ class MainActivity : AppCompatActivity() {
         map.overlayManager.add(rightWayPolyline)
         map.invalidate()
 
+        routes.add(rightWayPolyline)
+        routes.add(leftWayPolyline)
 
         hidePointInfo()
         showRoutesInfo(json)
+    }
+
+    private fun clearRoutes() {
+        routes.forEach {
+            map.overlays.remove(it)
+        }
+        routes.clear()
     }
 
 

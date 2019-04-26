@@ -2,7 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     <org.osmdroid.views.MapView
@@ -14,8 +14,10 @@
     <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_gravity="end|top"
+            app:useCompatPadding="true"
+            app:layout_anchor="@id/info_layout"
+            app:layout_anchorGravity="top|right"
             android:id="@+id/directions_button"
             android:src="@drawable/ic_directions_white"
             app:backgroundTint="@color/colorPrimary"/>
@@ -26,11 +28,91 @@
             app:layout_anchor="@id/directions_button"
             app:layout_anchorGravity="top|center_horizontal"
             android:layout_gravity="center|top"
-            app:useCompatPadding="true"
             android:id="@+id/location_button"
             android:src="@drawable/ic_my_location_black"
             app:backgroundTint="#ffffff"/>
 
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/info_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="5dp"
+            android:background="@color/white"
+            android:layout_gravity="bottom">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/point_info_layout"
+                android:visibility="gone"
+                android:padding="16dp"
+                android:orientation="vertical">
+
+            <TextView
+                    android:textColor="#000000"
+                    android:textSize="17sp"
+                    android:id="@+id/point_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            <TextView
+                    android:id="@+id/point_location"
+                    android:layout_marginBottom="@dimen/default_margin"
+                    android:textSize="13sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            <Button
+                    style="@style/RoundedButton"
+                    android:text="@string/routes_button_text"
+                    android:id="@+id/button_routes"
+                    android:layout_width="@dimen/routes_button_width"
+                    android:layout_height="@dimen/routes_button_height"/>
+        </LinearLayout>
+
+
+        <GridLayout
+                android:id="@+id/routes_info_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:padding="16dp"
+                android:columnCount="2">
+
+            <TextView
+                    android:text="@string/left_route_label_text"
+                    android:textColor="#000000"
+                    android:textSize="17sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            <TextView
+                    android:text="@string/right_route_label_text"
+                    android:textColor="#000000"
+                    android:textSize="17sp"
+                    android:layout_gravity="end"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            <TextView
+                    android:id="@+id/left_route_stats"
+                    android:text="@string/left_route_label_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            <TextView
+                    android:id="@+id/right_route_stats"
+                    android:text="@string/right_route_label_text"
+                    android:layout_gravity="end"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+
+        </GridLayout>
+
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 
     <androidx.constraintlayout.widget.ConstraintLayout

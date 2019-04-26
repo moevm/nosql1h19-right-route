@@ -3,14 +3,13 @@ package com.dd.routing
 
 import android.content.Intent
 import android.graphics.Color
+import android.location.Address
+import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.util.Log
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -18,12 +17,8 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -36,8 +31,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.io.IOException
-import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -91,6 +84,9 @@ class MainActivity : AppCompatActivity() {
                 map.overlays.add(marker)
                 map.invalidate()
                 close_button.visibility = View.VISIBLE
+                if (p != null) {
+                    getNameFromLocation(p)
+                }
                 return true
             }
 
@@ -100,13 +96,70 @@ class MainActivity : AppCompatActivity() {
         })
         map.overlays.add(mapEventsOverlay)
 
-
-
-
         showLocation()
         setListeners() // Устанавлеваем слушатели на все
     }
 
+
+    private fun getNameFromLocation(point: GeoPoint) {
+//      val geocoder = GeocoderNominatim(BuildConfig.APPLICATION_ID)
+//      val list = geocoder.getFromLocation(point.latitude, point.longitude, 10)
+        val geocoder = Geocoder(this)
+        val addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1)
+        if (addresses.isNotEmpty()) {
+            showPointInfo(addresses.first())
+        }
+    }
+
+
+    private fun showPointInfo(address: Address) {
+        val addressBuilder = StringBuilder()
+        addressBuilder.append(address.getAddressLine(0))
+        val pointInfoLayout = info_layout.findViewById<LinearLayout>(R.id.point_info_layout)
+        pointInfoLayout.findViewById<TextView>(R.id.point_name).text = addressBuilder.toString()
+        pointInfoLayout.findViewById<TextView>(R.id.point_location).text =
+            getString(
+                R.string.point_location,
+                address.latitude.toFloat().toString(),
+                address.longitude.toFloat().toString()
+            )
+        pointInfoLayout.visibility = View.VISIBLE
+    }
+
+
+    private fun hidePointInfo() {
+        info_layout.findViewById<LinearLayout>(R.id.point_info_layout).visibility = View.GONE
+    }
+
+
+    private fun showRoutesInfo(json: JSONObject) {
+        val routesInfoLayout = info_layout.findViewById<GridLayout>(R.id.routes_info_layout)
+
+        val leftDistance = json.getDouble("distance_left")
+        val rightDistance = json.getDouble("distance_right")
+
+        if (leftDistance < 1.0) {
+            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
+                getString(R.string.distance_in_m, leftDistance.times(1000).toInt())
+        } else {
+            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
+                getString(R.string.distance_in_km, String.format("%.1f", leftDistance))
+        }
+
+        if (rightDistance < 1.0) {
+            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
+                getString(R.string.distance_in_m, rightDistance.times(1000).toInt())
+        } else {
+            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
+                getString(R.string.distance_in_km, String.format("%.1f", rightDistance))
+        }
+
+        routesInfoLayout.visibility = View.VISIBLE
+    }
+
+    private fun hideRoutesInfo() {
+        info_layout.findViewById<GridLayout>(R.id.routes_info_layout).visibility = View.GONE
+    }
 
     private fun setListeners() {
         navigation_view.setNavigationItemSelectedListener { menuItem ->
@@ -172,7 +225,7 @@ class MainActivity : AppCompatActivity() {
                     showLocation()
                     Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e : Exception) {
+            } catch (e: Exception) {
                 showLocation()
             }
 
@@ -219,7 +272,7 @@ class MainActivity : AppCompatActivity() {
 
             val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
                 Response.Listener { response ->
-                    drawWays(response)
+                    drawRoutes(response)
 
                 },
                 Response.ErrorListener {
@@ -238,11 +291,13 @@ class MainActivity : AppCompatActivity() {
             }
             markers.clear()
             map.invalidate()
+            hidePointInfo()
+            hideRoutesInfo()
             it.visibility = View.GONE
         }
     }
 
-    private fun drawWays(json: JSONObject) {
+    private fun drawRoutes(json: JSONObject) {
         Toast.makeText(this, "Прилетело", Toast.LENGTH_SHORT).show()
         val rightWayJSON = json.getJSONArray("path_right")
         val rightWayPoints = ArrayList<GeoPoint>()
@@ -259,7 +314,6 @@ class MainActivity : AppCompatActivity() {
         rightWayPolyline.color = Color.RED
         rightWayPolyline.width = 8.0f
 
-
         val leftWayJSON = json.getJSONArray("path_left")
         val leftWayPoints = ArrayList<GeoPoint>()
         for (i in 0 until leftWayJSON.length()) {
@@ -275,10 +329,13 @@ class MainActivity : AppCompatActivity() {
         leftWayPolyline.color = Color.BLUE
         leftWayPolyline.width = 15.0f
 
-
         map.overlayManager.add(leftWayPolyline)
         map.overlayManager.add(rightWayPolyline)
         map.invalidate()
+
+
+        hidePointInfo()
+        showRoutesInfo(json)
     }
 
 

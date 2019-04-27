@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
@@ -57,6 +58,7 @@ class DataActivity : AppCompatActivity() {
                     Toast.makeText(this, "Backup error", Toast.LENGTH_SHORT).show()
                 }
             )
+            stringRequest.retryPolicy = DefaultRetryPolicy(100000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
             VolleyQueue.getInstance(this).addToRequestQueue(stringRequest)
         }
 
@@ -70,6 +72,7 @@ class DataActivity : AppCompatActivity() {
                     Toast.makeText(this, "Restore error", Toast.LENGTH_SHORT).show()
                 }
             )
+            stringRequest.retryPolicy = DefaultRetryPolicy(100000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
             VolleyQueue.getInstance(this).addToRequestQueue(stringRequest)
         }
 
@@ -88,6 +91,7 @@ class DataActivity : AppCompatActivity() {
                     Toast.makeText(this, "Import error", Toast.LENGTH_SHORT).show()
                 }
             )
+            stringRequest.retryPolicy = DefaultRetryPolicy(100000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
             VolleyQueue.getInstance(this).addToRequestQueue(stringRequest)
         }
     }

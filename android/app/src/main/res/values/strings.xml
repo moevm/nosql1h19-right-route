@@ -22,8 +22,8 @@
     <string name="server_url_label">Server URL</string>
     <string name="save_button_text">Save</string>
     <string name="routes_button_text">Routes</string>
-    <string name="left_route_label_text">Left</string>
-    <string name="right_route_label_text">Right</string>
+    <string name="left_route_label_text">Without left</string>
+    <string name="right_route_label_text">Normal</string>
 
     <string name="distance_in_m">%1$dm</string>
     <string name="distance_in_km">%1$skm</string>

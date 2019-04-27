@@ -165,6 +165,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
+        info_layout.findViewById<LinearLayout>(R.id.point_info_layout).findViewById<Button>(R.id.button_routes)
+            .setOnClickListener {
+                buildRoutes()
+            }
+
+        info_layout.setOnClickListener {
+            // Чтобы не взаимодействовать с картой позади
+        }
+
         navigation_view.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_available_area -> {
@@ -233,60 +242,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         directions_button.setOnClickListener {
-            val urlBuilder = StringBuilder(getServerUrl(this))
-            when (markers.size) {
-                0 -> {
-                    Toast.makeText(this, "Недостаточно точек", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                1 -> {
-                    if (locationOverlay.isMyLocationEnabled) {
-                        val location = locationOverlay.myLocation
-                        urlBuilder
-                            .append("/api/0.5/fullroute")
-                            .append("?lat1=${location.latitude}")
-                            .append("&lon1=${location.longitude}")
-                            .append("&lat2=${markers.last().position.latitude}")
-                            .append("&lon2=${markers.last().position.longitude}")
-
-                    } else {
-                        showLocation()
-                        Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                }
-                2 -> {
-                    urlBuilder
-                        .append("/api/0.5/fullroute")
-                        .append("?lat1=${markers.first().position.latitude}")
-                        .append("&lon1=${markers.first().position.longitude}")
-                        .append("&lat2=${markers.last().position.latitude}")
-                        .append("&lon2=${markers.last().position.longitude}")
-                }
-                else -> {
-                    Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-            }
-
-
-            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
-                Response.Listener { response ->
-                    drawRoutes(response)
-
-                },
-                Response.ErrorListener {
-                    Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
-                }
-            )
-
-            jsonObjectRequest.retryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-
-
-            Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
-            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+            buildRoutes()
         }
 
         close_button.setOnClickListener {
@@ -344,6 +301,62 @@ class MainActivity : AppCompatActivity() {
 
         hidePointInfo()
         showRoutesInfo(json)
+    }
+
+
+    private fun buildRoutes() {
+        val urlBuilder = StringBuilder(getServerUrl(this))
+        when (markers.size) {
+            0 -> {
+                Toast.makeText(this, "Недостаточно точек", Toast.LENGTH_SHORT).show()
+                return
+            }
+            1 -> {
+                if (locationOverlay.isMyLocationEnabled) {
+                    val location = locationOverlay.myLocation
+                    urlBuilder
+                        .append("/api/0.5/fullroute")
+                        .append("?lat1=${location.latitude}")
+                        .append("&lon1=${location.longitude}")
+                        .append("&lat2=${markers.last().position.latitude}")
+                        .append("&lon2=${markers.last().position.longitude}")
+
+                } else {
+                    showLocation()
+                    Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+            2 -> {
+                urlBuilder
+                    .append("/api/0.5/fullroute")
+                    .append("?lat1=${markers.first().position.latitude}")
+                    .append("&lon1=${markers.first().position.longitude}")
+                    .append("&lat2=${markers.last().position.latitude}")
+                    .append("&lon2=${markers.last().position.longitude}")
+            }
+            else -> {
+                Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+
+        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
+            Response.Listener { response ->
+                drawRoutes(response)
+
+            },
+            Response.ErrorListener {
+                Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
+            }
+        )
+
+        jsonObjectRequest.retryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+
+
+        Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
+        VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
     }
 
     private fun clearRoutes() {

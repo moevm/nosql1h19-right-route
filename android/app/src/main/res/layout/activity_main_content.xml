@@ -11,6 +11,18 @@
             android:id="@+id/map"/>
 
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_anchor="@id/search_panel"
+            app:layout_anchorGravity="right|bottom"
+            android:layout_gravity="end|bottom"
+            android:id="@+id/available_area_button"
+            android:src="@drawable/ic_area_black"
+            android:backgroundTint="@color/white"
+            app:fabSize="mini"
+            app:useCompatPadding="true"/>
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="wrap_content"
@@ -117,6 +129,7 @@
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/search_panel"
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

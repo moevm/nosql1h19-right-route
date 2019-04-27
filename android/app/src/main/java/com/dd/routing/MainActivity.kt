@@ -8,6 +8,7 @@ import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -29,6 +30,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -39,6 +41,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var locationOverlay: MyLocationNewOverlay
     val markers = ArrayList<Marker>()
     private val routes = ArrayList<Polyline>()
+    private val areas = ArrayList<Polygon>()
+    var isAvailableAreaShown = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -164,7 +168,63 @@ class MainActivity : AppCompatActivity() {
         info_layout.findViewById<GridLayout>(R.id.routes_info_layout).visibility = View.GONE
     }
 
+
+    private fun displayAvailableArea() {
+        val url = "${getServerUrl(this)}/api/0.5/bounds"
+        val jsonObjectRequest = JsonObjectRequest(
+            Request.Method.GET, url, null,
+            Response.Listener { response ->
+                drawArea(response)
+            },
+            Response.ErrorListener { error ->
+                Response.ErrorListener {
+                    Log.d("Request", error.message)
+                }
+            }
+        )
+        VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+    }
+
+    private fun drawArea(json: JSONObject) {
+        areas.forEach {
+            map.overlayManager.remove(it)
+        }
+        areas.clear()
+        val bounds = json.getJSONArray("bounds")
+        for (i in 0 until bounds.length()) {
+            val area = bounds.getJSONObject(i)
+            val polygon = Polygon()
+            polygon.fillColor = Color.argb(64, 0, 255, 0)
+            polygon.strokeWidth = 0.0f
+            polygon.points = arrayListOf(
+                GeoPoint(area.getDouble("minlat"), area.getDouble("minlon")),
+                GeoPoint(area.getDouble("maxlat"), area.getDouble("minlon")),
+                GeoPoint(area.getDouble("maxlat"), area.getDouble("maxlon")),
+                GeoPoint(area.getDouble("minlat"), area.getDouble("maxlon"))
+            )
+            areas.add(polygon)
+            map.overlayManager.add(polygon)
+            map.invalidate()
+        }
+    }
+
     private fun setListeners() {
+        available_area_button.setOnClickListener {
+            if (isAvailableAreaShown) {
+                areas.forEach {
+                    map.overlayManager.remove(it)
+                }
+                areas.clear()
+                isAvailableAreaShown = false
+                map.invalidate()
+
+            } else {
+                displayAvailableArea()
+                isAvailableAreaShown = true
+            }
+        }
+
+
         info_layout.findViewById<LinearLayout>(R.id.point_info_layout).findViewById<Button>(R.id.button_routes)
             .setOnClickListener {
                 buildRoutes()

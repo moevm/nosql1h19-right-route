@@ -122,6 +122,17 @@
                     android:layout_height="wrap_content"/>
 
 
+            <Button
+                    android:background="#0000FF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"/>
+
+            <Button
+                    android:background="#FF0000"
+                    android:layout_gravity="end"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"/>
+
         </GridLayout>
 
 

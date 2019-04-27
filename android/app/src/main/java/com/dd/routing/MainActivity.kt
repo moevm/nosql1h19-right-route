@@ -145,7 +145,9 @@ class MainActivity : AppCompatActivity() {
         val leftDistance = json.getDouble("distance_left")
         val rightDistance = json.getDouble("distance_right")
 
-        if (leftDistance < 1.0) {
+        if (json.getJSONArray("path_left").length() == 0) {
+            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text = getString(R.string.not_found)
+        } else if (leftDistance < 1.0) {
             routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
                 getString(R.string.distance_in_m, leftDistance.times(1000).toInt())
         } else {
@@ -153,7 +155,9 @@ class MainActivity : AppCompatActivity() {
                 getString(R.string.distance_in_km, String.format("%.1f", leftDistance))
         }
 
-        if (rightDistance < 1.0) {
+        if (json.getJSONArray("path_right").length() == 0) {
+            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text = getString(R.string.not_found)
+        } else if (rightDistance < 1.0) {
             routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
                 getString(R.string.distance_in_m, rightDistance.times(1000).toInt())
         } else {

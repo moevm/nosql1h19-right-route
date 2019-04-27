@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var locationOverlay: MyLocationNewOverlay
     val markers = ArrayList<Marker>()
-    val routes = ArrayList<Polyline>()
+    private val routes = ArrayList<Polyline>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +89,7 @@ class MainActivity : AppCompatActivity() {
                 if (p != null) {
                     getNameFromLocation(p)
                 }
+                hideRoutesInfo()
                 return true
             }
 
@@ -279,9 +281,11 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
                 }
             )
+
+            jsonObjectRequest.retryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+
+
             Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
-
-
             VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
 

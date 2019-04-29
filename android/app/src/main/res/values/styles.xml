@@ -27,6 +27,12 @@
         <item name="android:layout_margin">8dp</item>
         <item name="android:background">@drawable/button</item>
     </style>
+
+    <style name="RoundedButton" parent="Base.TextAppearance.AppCompat.Widget.Button">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:background">@drawable/button_rounded</item>
+    </style>
+
     <style name="AppTheme.TransparentStatusBar.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

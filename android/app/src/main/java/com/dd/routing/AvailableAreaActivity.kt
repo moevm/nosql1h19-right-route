@@ -27,7 +27,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 class AvailableAreaActivity : AppCompatActivity() {
 
     private val areas = ArrayList<Polygon>()
-    lateinit var locationOverlay: MyLocationNewOverlay
+    private lateinit var locationOverlay: MyLocationNewOverlay
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".SettingsActivity">
+
+
+    <androidx.appcompat.widget.Toolbar
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:elevation="5dp"
+            android:background="@color/colorPrimary">
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              app:layout_constraintTop_toBottomOf="@id/toolbar"
+              android:text="@string/server_url_label"
+              android:textSize="20sp"
+              android:layout_margin="@dimen/default_margin"
+              android:id="@+id/server_url_label"/>
+
+    <EditText android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:id="@+id/server_url"
+              android:focusable="true"
+              android:focusableInTouchMode="true"
+              android:layout_margin="@dimen/default_margin"
+              android:inputType="textUri"
+              app:layout_constraintTop_toBottomOf="@id/server_url_label"
+              tools:ignore="Autofill"/>
+
+    <Button
+            style="@style/Button"
+            android:id="@+id/save_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/default_margin"
+            android:text="@string/save_button_text"
+            app:layout_constraintTop_toBottomOf="@id/server_url"
+            app:layout_constraintLeft_toLeftOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

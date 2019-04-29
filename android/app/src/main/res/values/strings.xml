@@ -3,6 +3,7 @@
     <string name="nav_header_title">The best routing app</string>
     <string name="nav_available_area_title">Available area</string>
     <string name="nav_data_title">Import/Export data</string>
+    <string name="nav_settings_title">Settings</string>
     <string name="nav_about_title">About</string>
     <string name="nav_exit_title">Exit</string>
     <string name="menu_button_description">Menu</string>
@@ -13,10 +14,22 @@
     <string name="no">No</string>
     <string name="about_activity_title">About</string>
     <string name="data_activity_title">Import/Export data</string>
-
-
-    <string name="info_text"><![CDATA[<b>Тут</b> должна быть какая-то информация]]></string>
+    <string name="settings_activity_title">Settings</string>
     <string name="backup_button_text">Backup</string>
     <string name="restore_button_text">Restore from backup</string>
     <string name="import_button_text">Import selected area</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="server_url_label">Server URL</string>
+    <string name="save_button_text">Save</string>
+    <string name="routes_button_text">Routes</string>
+    <string name="left_route_label_text">Without left</string>
+    <string name="right_route_label_text">Normal</string>
+    <string name="not_found">Not found</string>
+
+    <string name="distance_in_m">%1$dm</string>
+    <string name="distance_in_km">%1$skm</string>
+    <string name="point_location">%1$s, %2$s</string>
+
+
+    <string name="info_text"><![CDATA[<b>Тут</b> должна быть какая-то информация]]></string>
 </resources>

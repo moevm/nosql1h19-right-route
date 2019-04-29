@@ -65,7 +65,6 @@ class Graph(AStar):
         import overpy
         import numpy as np
         api = overpy.Overpass()
-        # заменить на строку
         dist = 50
         result = overpy.Result()
         while not result.ways:
@@ -166,7 +165,7 @@ class Graph(AStar):
             ways = []
             for a in self.neigh_ways[cur_node['node_id']]:  # сохранённые инцидентные пути
                 ways.append(a) if a['_id'] is not way_id else None  # без текущего пути
-            if len(ways) > 0 or (i == len(nodes) - 2 and len(ways) == 0):
+            if len(ways) > 0 or (i == len(nodes) - 2):
                 # найдена новая вершина - записать соседа и просчитать длину ребра
                 self.add_neighbor(way_id, node['_id'], cur_node['node_id'], nodes[:i + 2], oneway_flag)
                 return str(cur_node['node_id'])  # если найден сосед - выход
@@ -184,24 +183,13 @@ class Graph(AStar):
         stack = set()
         stack.add(random_way['nodes'][random.randint(0, len(random_way['nodes']) - 1)]['node_id'])
         count = 0
-        while len(stack) > 0:  # and count < 200:
+        while len(stack) > 0:
             node_info = self.db_client.nodes.find_one({'_id': stack.pop()})
             if not ('to_flag' in node_info and node_info['to_flag'] is True):
                 count = count + 1
                 for a in self.find_all_neigh(node_info):
                     stack.add(int(a))
-                print(count, node_info['_id'], len(stack))
-            else:
-                print('>> skip last')
-            '''
-            if not stack:
-                random_way = self.db_client.ways.find({}, {'nodes': 1}).skip(
-                    random.randint(0, self.db_client.ways.count_documents({}) - 1)).limit(1)[0]
-                new = random_way['nodes'][random.randint(0, len(random_way['nodes']) - 1)]['node_id']
-                stack.add(new)
-                print('>>> добавил', new)
-            '''
-            self.db_client.nodes.update({'_id': node_info['_id']}, {'$set': {'to_flag': True}})
+                self.db_client.nodes.update({'_id': node_info['_id']}, {'$set': {'to_flag': True}})
 
     def delete_graph(self):
         """

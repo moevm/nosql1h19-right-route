@@ -3,27 +3,24 @@ package com.dd.routing
 
 import android.content.Intent
 import android.graphics.Color
+import android.location.Address
+import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -33,17 +30,19 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.io.IOException
-import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var locationOverlay: MyLocationNewOverlay
+    private lateinit var locationOverlay: MyLocationNewOverlay
     val markers = ArrayList<Marker>()
+    private val routes = ArrayList<Polyline>()
+    private val areas = ArrayList<Polygon>()
+    private var isAvailableAreaShown = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +90,10 @@ class MainActivity : AppCompatActivity() {
                 map.overlays.add(marker)
                 map.invalidate()
                 close_button.visibility = View.VISIBLE
+                if (p != null) {
+                    getNameFromLocation(p)
+                }
+                hideRoutesInfo()
                 return true
             }
 
@@ -100,15 +103,139 @@ class MainActivity : AppCompatActivity() {
         })
         map.overlays.add(mapEventsOverlay)
 
-
-
-
         showLocation()
         setListeners() // Устанавлеваем слушатели на все
     }
 
 
+    private fun getNameFromLocation(point: GeoPoint) {
+        val geocoder = Geocoder(this)
+        val addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1)
+        if (addresses.isNotEmpty()) {
+            showPointInfo(addresses.first())
+        }
+    }
+
+
+    private fun showPointInfo(address: Address) {
+        val addressBuilder = StringBuilder()
+        addressBuilder.append(address.getAddressLine(0))
+        val pointInfoLayout = info_layout.findViewById<LinearLayout>(R.id.point_info_layout)
+        pointInfoLayout.findViewById<TextView>(R.id.point_name).text = addressBuilder.toString()
+        pointInfoLayout.findViewById<TextView>(R.id.point_location).text =
+            getString(
+                R.string.point_location,
+                address.latitude.toFloat().toString(),
+                address.longitude.toFloat().toString()
+            )
+        pointInfoLayout.visibility = View.VISIBLE
+    }
+
+
+    private fun hidePointInfo() {
+        info_layout.findViewById<LinearLayout>(R.id.point_info_layout).visibility = View.GONE
+    }
+
+
+    private fun showRoutesInfo(json: JSONObject) {
+        val routesInfoLayout = info_layout.findViewById<GridLayout>(R.id.routes_info_layout)
+
+        val leftDistance = json.getDouble("distance_left")
+        val rightDistance = json.getDouble("distance_right")
+
+        if (json.getJSONArray("path_left").length() == 0) {
+            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text = getString(R.string.not_found)
+        } else if (leftDistance < 1.0) {
+            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
+                getString(R.string.distance_in_m, leftDistance.times(1000).toInt())
+        } else {
+            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
+                getString(R.string.distance_in_km, String.format("%.1f", leftDistance))
+        }
+
+        if (json.getJSONArray("path_right").length() == 0) {
+            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text = getString(R.string.not_found)
+        } else if (rightDistance < 1.0) {
+            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
+                getString(R.string.distance_in_m, rightDistance.times(1000).toInt())
+        } else {
+            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
+                getString(R.string.distance_in_km, String.format("%.1f", rightDistance))
+        }
+
+        routesInfoLayout.visibility = View.VISIBLE
+    }
+
+    private fun hideRoutesInfo() {
+        info_layout.findViewById<GridLayout>(R.id.routes_info_layout).visibility = View.GONE
+    }
+
+
+    private fun displayAvailableArea() {
+        val url = "${getServerUrl(this)}/api/0.5/bounds"
+        val jsonObjectRequest = JsonObjectRequest(
+            Request.Method.GET, url, null,
+            Response.Listener { response ->
+                drawArea(response)
+            },
+            Response.ErrorListener { error ->
+                Response.ErrorListener {
+                    Log.d("Request", error.message)
+                }
+            }
+        )
+        VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+    }
+
+    private fun drawArea(json: JSONObject) {
+        areas.forEach {
+            map.overlayManager.remove(it)
+        }
+        areas.clear()
+        val bounds = json.getJSONArray("bounds")
+        for (i in 0 until bounds.length()) {
+            val area = bounds.getJSONObject(i)
+            val polygon = Polygon()
+            polygon.fillColor = Color.argb(64, 0, 255, 0)
+            polygon.strokeWidth = 0.0f
+            polygon.points = arrayListOf(
+                GeoPoint(area.getDouble("minlat"), area.getDouble("minlon")),
+                GeoPoint(area.getDouble("maxlat"), area.getDouble("minlon")),
+                GeoPoint(area.getDouble("maxlat"), area.getDouble("maxlon")),
+                GeoPoint(area.getDouble("minlat"), area.getDouble("maxlon"))
+            )
+            areas.add(polygon)
+            map.overlayManager.add(polygon)
+            map.invalidate()
+        }
+    }
+
     private fun setListeners() {
+        available_area_button.setOnClickListener {
+            if (isAvailableAreaShown) {
+                areas.forEach {
+                    map.overlayManager.remove(it)
+                }
+                areas.clear()
+                isAvailableAreaShown = false
+                map.invalidate()
+
+            } else {
+                displayAvailableArea()
+                isAvailableAreaShown = true
+            }
+        }
+
+
+        info_layout.findViewById<LinearLayout>(R.id.point_info_layout).findViewById<Button>(R.id.button_routes)
+            .setOnClickListener {
+                buildRoutes()
+            }
+
+        info_layout.setOnClickListener {
+            // Чтобы не взаимодействовать с картой позади
+        }
+
         navigation_view.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_available_area -> {
@@ -116,6 +243,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.nav_data -> {
                     startActivity(Intent(this, DataActivity::class.java))
+                }
+                R.id.nav_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
                 }
                 R.id.nav_about -> {
                     startActivity(Intent(this, AboutActivity::class.java))
@@ -169,95 +299,13 @@ class MainActivity : AppCompatActivity() {
                     showLocation()
                     Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e : Exception) {
+            } catch (e: Exception) {
                 showLocation()
             }
-
         }
 
-
         directions_button.setOnClickListener {
-
-            val urlBuilder = StringBuilder(VolleyQueue.serverUrl)
-            when (markers.size) {
-                0 -> {
-                    Toast.makeText(this, "Недостаточно точек", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                1 -> {
-                    if (locationOverlay.isMyLocationEnabled) {
-                        val location = locationOverlay.myLocation
-                        urlBuilder
-                            .append("/api/0.5/fullroute")
-                            .append("?lat1=${location.latitude}")
-                            .append("&lon1=${location.longitude}")
-                            .append("&lat2=${markers.last().position.latitude}")
-                            .append("&lon2=${markers.last().position.longitude}")
-
-                    } else {
-                        showLocation()
-                        Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                }
-                2 -> {
-                    urlBuilder
-                        .append("/api/0.5/fullroute")
-                        .append("?lat1=${markers.first().position.latitude}")
-                        .append("&lon1=${markers.first().position.longitude}")
-                        .append("&lat2=${markers.last().position.latitude}")
-                        .append("&lon2=${markers.last().position.longitude}")
-                }
-                else -> {
-                    Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-            }
-
-
-            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
-                Response.Listener { response ->
-                    drawWays(response)
-
-                },
-                Response.ErrorListener { error ->
-                    Response.ErrorListener {
-                        Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-            Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
-
-
-
-//            val client = OkHttpClient()
-//            val request = okhttp3.Request.Builder()
-//                .url(urlBuilder.toString())
-//                .build()
-//
-//            client.newCall(request).enqueue(object : Callback {
-//                override fun onFailure(call: Call, e: IOException) {
-//                    e.printStackTrace()
-//                }
-//
-//                override fun onResponse(call: Call, response: okhttp3.Response) {
-//                    if(response.isSuccessful) {
-//                        runOnUiThread {
-//                            if (response.body() != null) {
-//                                try {
-//                                    drawWays(JSONObject(response.body()?.string()))
-//                                } catch (e : Exception) {
-//                                    Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
-//                                }
-//                            } else {
-//                                Toast.makeText(applicationContext, "Что-то пошло не так", Toast.LENGTH_LONG).show()
-//                            }
-//                        }
-//                    }
-//                }
-//            })
-
-            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+            buildRoutes()
         }
 
         close_button.setOnClickListener {
@@ -266,12 +314,14 @@ class MainActivity : AppCompatActivity() {
             }
             markers.clear()
             map.invalidate()
+            hidePointInfo()
+            hideRoutesInfo()
+            clearRoutes()
             it.visibility = View.GONE
         }
     }
 
-    private fun drawWays(json: JSONObject) {
-        Toast.makeText(this, "Прилетело", Toast.LENGTH_SHORT).show()
+    private fun drawRoutes(json: JSONObject) {
         val rightWayJSON = json.getJSONArray("path_right")
         val rightWayPoints = ArrayList<GeoPoint>()
         for (i in 0 until rightWayJSON.length()) {
@@ -286,7 +336,6 @@ class MainActivity : AppCompatActivity() {
         rightWayPolyline.setPoints(rightWayPoints)
         rightWayPolyline.color = Color.RED
         rightWayPolyline.width = 8.0f
-
 
         val leftWayJSON = json.getJSONArray("path_left")
         val leftWayPoints = ArrayList<GeoPoint>()
@@ -303,10 +352,79 @@ class MainActivity : AppCompatActivity() {
         leftWayPolyline.color = Color.BLUE
         leftWayPolyline.width = 15.0f
 
-
         map.overlayManager.add(leftWayPolyline)
         map.overlayManager.add(rightWayPolyline)
         map.invalidate()
+
+        routes.add(rightWayPolyline)
+        routes.add(leftWayPolyline)
+
+        hidePointInfo()
+        showRoutesInfo(json)
+    }
+
+
+    private fun buildRoutes() {
+        clearRoutes()
+        val urlBuilder = StringBuilder(getServerUrl(this))
+        when (markers.size) {
+            0 -> {
+                Toast.makeText(this, "Недостаточно точек", Toast.LENGTH_SHORT).show()
+                return
+            }
+            1 -> {
+                if (locationOverlay.isMyLocationEnabled) {
+                    val location = locationOverlay.myLocation
+                    urlBuilder
+                        .append("/api/0.5/fullroute")
+                        .append("?lat1=${location.latitude}")
+                        .append("&lon1=${location.longitude}")
+                        .append("&lat2=${markers.last().position.latitude}")
+                        .append("&lon2=${markers.last().position.longitude}")
+
+                } else {
+                    showLocation()
+                    Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+            2 -> {
+                urlBuilder
+                    .append("/api/0.5/fullroute")
+                    .append("?lat1=${markers.first().position.latitude}")
+                    .append("&lon1=${markers.first().position.longitude}")
+                    .append("&lat2=${markers.last().position.latitude}")
+                    .append("&lon2=${markers.last().position.longitude}")
+            }
+            else -> {
+                Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+
+        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
+            Response.Listener { response ->
+                drawRoutes(response)
+
+            },
+            Response.ErrorListener {
+                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
+            }
+        )
+
+        jsonObjectRequest.retryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+
+
+        Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
+        VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
+    }
+
+    private fun clearRoutes() {
+        routes.forEach {
+            map.overlays.remove(it)
+        }
+        routes.clear()
     }
 
 

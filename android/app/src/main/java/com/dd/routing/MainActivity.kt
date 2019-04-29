@@ -38,11 +38,11 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var locationOverlay: MyLocationNewOverlay
+    private lateinit var locationOverlay: MyLocationNewOverlay
     val markers = ArrayList<Marker>()
     private val routes = ArrayList<Polyline>()
     private val areas = ArrayList<Polygon>()
-    var isAvailableAreaShown = false
+    private var isAvailableAreaShown = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,8 +109,6 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun getNameFromLocation(point: GeoPoint) {
-//      val geocoder = GeocoderNominatim(BuildConfig.APPLICATION_ID)
-//      val list = geocoder.getFromLocation(point.latitude, point.longitude, 10)
         val geocoder = Geocoder(this)
         val addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1)
         if (addresses.isNotEmpty()) {
@@ -324,8 +322,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun drawRoutes(json: JSONObject) {
-        Toast.makeText(this, "Прилетело", Toast.LENGTH_SHORT).show()
-        clearRoutes()
         val rightWayJSON = json.getJSONArray("path_right")
         val rightWayPoints = ArrayList<GeoPoint>()
         for (i in 0 until rightWayJSON.length()) {
@@ -369,6 +365,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun buildRoutes() {
+        clearRoutes()
         val urlBuilder = StringBuilder(getServerUrl(this))
         when (markers.size) {
             0 -> {
@@ -412,7 +409,7 @@ class MainActivity : AppCompatActivity() {
 
             },
             Response.ErrorListener {
-                Toast.makeText(this, "ОШИБКА ААА", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
             }
         )
 

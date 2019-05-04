@@ -34,6 +34,7 @@ import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -110,9 +111,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun getNameFromLocation(point: GeoPoint) {
         val geocoder = Geocoder(this)
-        val addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1)
-        if (addresses.isNotEmpty()) {
-            showPointInfo(addresses.first())
+        try {
+            val addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1)
+            if (addresses.isNotEmpty()) {
+                showPointInfo(addresses.first())
+            }
+        } catch (e: IOException) {
+            Toast.makeText(this, "No connection", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -425,6 +430,7 @@ class MainActivity : AppCompatActivity() {
             map.overlays.remove(it)
         }
         routes.clear()
+        map.invalidate()
     }
 
 

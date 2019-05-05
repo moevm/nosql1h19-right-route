@@ -42,7 +42,7 @@ import kotlin.collections.ArrayList
 class MainActivity : AppCompatActivity() {
 
     private lateinit var locationOverlay: MyLocationNewOverlay
-    val markers = ArrayList<Marker>()
+    private val markers = ArrayList<Marker>()
     private val routes = ArrayList<Polyline>()
     private val areas = ArrayList<Polygon>()
     private var isAvailableAreaShown = false
@@ -116,6 +116,14 @@ class MainActivity : AppCompatActivity() {
                             boundingBox.lonEast
                         ).firstOrNull()?.let {
                             addMarker(GeoPoint(it.latitude, it.longitude))
+                            map.zoomToBoundingBox(
+                                BoundingBox(
+                                    it.latitude + 0.02,
+                                    it.longitude + 0.02,
+                                    it.latitude - 0.02,
+                                    it.longitude - 0.02
+                                ), true
+                            )
                             showPointInfo(it)
                         }
                     } catch (e: IOException) {

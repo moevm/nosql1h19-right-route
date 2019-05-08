@@ -262,6 +262,7 @@ class MainActivity : AppCompatActivity() {
             map.overlays.remove(markers[0])
             markers.removeAt(0)
         }
+        marker.icon = getDrawable(R.drawable.ic_marker_red)
         markers.add(marker)
         markers.first().title = "Start"
         markers.last().title = "End"

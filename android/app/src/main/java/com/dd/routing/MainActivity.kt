@@ -1,6 +1,8 @@
 package com.dd.routing
 
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.content.Intent
 import android.graphics.Color
 import android.location.Address
@@ -10,7 +12,10 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.View
-import android.widget.*
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.SearchView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -131,9 +136,7 @@ class MainActivity : AppCompatActivity() {
                     } catch (e: IllegalArgumentException) {
 
                     }
-
                 }
-
                 return true
             }
 
@@ -160,10 +163,9 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        info_layout.findViewById<LinearLayout>(R.id.point_info_layout).findViewById<Button>(R.id.button_routes)
-            .setOnClickListener {
-                buildRoutes()
-            }
+        button_routes.setOnClickListener {
+            buildRoutes()
+        }
 
         info_layout.setOnClickListener {
             // Чтобы не взаимодействовать с картой позади
@@ -230,7 +232,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 } else {
                     showLocation()
-                    Toast.makeText(this, "Не удается определить местоположение", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Unable to locate", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 showLocation()
@@ -249,7 +251,7 @@ class MainActivity : AppCompatActivity() {
             map.invalidate()
             hidePointInfo()
             hideRoutesInfo()
-            clearRoutes()
+            removeRoutesFromMap()
             it.visibility = View.GONE
         }
     }
@@ -291,55 +293,64 @@ class MainActivity : AppCompatActivity() {
         if (address != null) {
             val addressBuilder = StringBuilder()
             addressBuilder.append(address.getAddressLine(0))
-            val pointInfoLayout = info_layout.findViewById<LinearLayout>(R.id.point_info_layout)
-            pointInfoLayout.findViewById<TextView>(R.id.point_name).text = addressBuilder.toString()
-            pointInfoLayout.findViewById<TextView>(R.id.point_location).text =
+            point_name.text = addressBuilder.toString()
+            point_location.text =
                 getString(
                     R.string.point_location,
                     address.latitude.toFloat().toString(),
                     address.longitude.toFloat().toString()
                 )
-            pointInfoLayout.visibility = View.VISIBLE
+            point_info_layout.apply {
+                alpha = 0f
+                visibility = View.VISIBLE
+                animate()
+                    .alpha(1f)
+                    .setListener(null)
+            }
         }
     }
 
 
     private fun hidePointInfo() {
-        info_layout.findViewById<LinearLayout>(R.id.point_info_layout).visibility = View.GONE
+        point_info_layout.animate()
+            .alpha(0f)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    point_info_layout.visibility = View.GONE
+                }
+            })
     }
 
 
     private fun showRoutesInfo(json: JSONObject) {
-        val routesInfoLayout = info_layout.findViewById<GridLayout>(R.id.routes_info_layout)
-
         val leftDistance = json.getDouble("distance_left")
         val rightDistance = json.getDouble("distance_right")
 
         if (json.getJSONArray("path_left").length() == 0) {
-            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text = getString(R.string.not_found)
+            left_route_stats.text = getString(R.string.not_found)
         } else if (leftDistance < 1.0) {
-            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
+            left_route_stats.text =
                 getString(R.string.distance_in_m, leftDistance.times(1000).toInt())
         } else {
-            routesInfoLayout.findViewById<TextView>(R.id.left_route_stats).text =
+            left_route_stats.text =
                 getString(R.string.distance_in_km, String.format("%.1f", leftDistance))
         }
 
         if (json.getJSONArray("path_right").length() == 0) {
-            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text = getString(R.string.not_found)
+            right_route_stats.text = getString(R.string.not_found)
         } else if (rightDistance < 1.0) {
-            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
+            right_route_stats.text =
                 getString(R.string.distance_in_m, rightDistance.times(1000).toInt())
         } else {
-            routesInfoLayout.findViewById<TextView>(R.id.right_route_stats).text =
+            right_route_stats.text =
                 getString(R.string.distance_in_km, String.format("%.1f", rightDistance))
         }
 
-        routesInfoLayout.visibility = View.VISIBLE
+        routes_info_layout.visibility = View.VISIBLE
     }
 
     private fun hideRoutesInfo() {
-        info_layout.findViewById<GridLayout>(R.id.routes_info_layout).visibility = View.GONE
+        routes_info_layout.visibility = View.GONE
     }
 
 
@@ -427,7 +438,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun buildRoutes() {
-        clearRoutes()
+        removeRoutesFromMap()
         val urlBuilder = StringBuilder(getServerUrl(this))
         when (markers.size) {
             0 -> {
@@ -482,7 +493,7 @@ class MainActivity : AppCompatActivity() {
         VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
     }
 
-    private fun clearRoutes() {
+    private fun removeRoutesFromMap() {
         routes.forEach {
             map.overlays.remove(it)
         }

@@ -77,7 +77,7 @@ class AvailableAreaActivity : AppCompatActivity() {
         )
         VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
     }
-    
+
     private fun drawAvailableArea(json: JSONObject) {
         if (json.getBoolean("error")) {
             Toast.makeText(this, json.getString("msg"), Toast.LENGTH_LONG).show()

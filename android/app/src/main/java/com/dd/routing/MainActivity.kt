@@ -360,7 +360,7 @@ class MainActivity : AppCompatActivity() {
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, url, null,
             Response.Listener { response ->
-                drawArea(response)
+                drawAvailableArea(response)
             },
             Response.ErrorListener { error ->
                 Response.ErrorListener {
@@ -371,12 +371,16 @@ class MainActivity : AppCompatActivity() {
         VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
     }
 
-    private fun drawArea(json: JSONObject) {
+    private fun drawAvailableArea(json: JSONObject) {
+        if (json.getBoolean("error")) {
+            Toast.makeText(this, json.getString("msg"), Toast.LENGTH_LONG).show()
+            return
+        }
         areas.forEach {
             map.overlayManager.remove(it)
         }
         areas.clear()
-        val bounds = json.getJSONArray("bounds")
+        val bounds = json.getJSONObject("data").getJSONArray("bounds")
         for (i in 0 until bounds.length()) {
             val area = bounds.getJSONObject(i)
             val polygon = Polygon()
@@ -392,6 +396,24 @@ class MainActivity : AppCompatActivity() {
             map.overlayManager.add(polygon)
             map.invalidate()
         }
+        zoomToAvailableArea()
+    }
+
+    private fun zoomToAvailableArea() {
+        if (areas.isEmpty()) {
+            return
+        }
+        val points = areas.flatMap { polygon ->
+            polygon.points
+        }
+        map.zoomToBoundingBox(
+            BoundingBox(
+                points.maxBy { it.latitude }!!.latitude,
+                points.maxBy { it.longitude }!!.longitude,
+                points.minBy { it.latitude }!!.latitude,
+                points.minBy { it.longitude }!!.longitude
+            ), true
+        )
     }
 
 
@@ -480,7 +502,6 @@ class MainActivity : AppCompatActivity() {
         val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, urlBuilder.toString(), null,
             Response.Listener { response ->
                 drawRoutes(response)
-
             },
             Response.ErrorListener {
                 Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
@@ -488,7 +509,6 @@ class MainActivity : AppCompatActivity() {
         )
 
         jsonObjectRequest.retryPolicy = DefaultRetryPolicy(50000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-
 
         Toast.makeText(this, "Полетел запрос", Toast.LENGTH_SHORT).show()
         VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)

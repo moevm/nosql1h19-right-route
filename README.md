@@ -1,4 +1,4 @@
-# nosql1h19-right-route
+# Поиск маршрутов без левых поворотов и разворотов
 #### Requirements
 - flask
 - pymongo

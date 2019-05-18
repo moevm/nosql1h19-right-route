@@ -7,6 +7,7 @@ import android.preference.PreferenceManager
 import android.util.Log
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.Response
@@ -66,7 +67,7 @@ class AvailableAreaActivity : AppCompatActivity() {
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, url, null,
             Response.Listener { response ->
-                drawArea(response)
+                drawAvailableArea(response)
             },
             Response.ErrorListener { error ->
                 Response.ErrorListener {
@@ -77,12 +78,16 @@ class AvailableAreaActivity : AppCompatActivity() {
         VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
     }
 
-    private fun drawArea(json: JSONObject) {
+    private fun drawAvailableArea(json: JSONObject) {
+        if (json.getBoolean("error")) {
+            Toast.makeText(this, json.getString("msg"), Toast.LENGTH_LONG).show()
+            return
+        }
         areas.forEach {
             map.overlayManager.remove(it)
         }
         areas.clear()
-        val bounds = json.getJSONArray("bounds")
+        val bounds = json.getJSONObject("data").getJSONArray("bounds")
         for (i in 0 until bounds.length()) {
             val area = bounds.getJSONObject(i)
             val polygon = Polygon()

@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import kotlinx.android.synthetic.main.activity_data.*
 import kotlinx.android.synthetic.main.activity_main_content.map
@@ -51,29 +51,31 @@ class DataActivity : AppCompatActivity() {
         backup_button.setOnClickListener {
             val urlBuilder = StringBuilder(getServerUrl(this))
                 .append("/api/0.5/create_backup")
-            val stringRequest = StringRequest(
-                Request.Method.GET, urlBuilder.toString(),
-                Response.Listener {},
+            val jsonObjectRequest = JsonObjectRequest(
+                Request.Method.GET, urlBuilder.toString(), null,
+                Response.Listener {
+                    Toast.makeText(this, it.getString("msg"), Toast.LENGTH_LONG).show()
+                },
                 Response.ErrorListener {
                     Toast.makeText(this, "Backup error", Toast.LENGTH_SHORT).show()
                 }
             )
-            stringRequest.retryPolicy = DefaultRetryPolicy(100000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-            VolleyQueue.getInstance(this).addToRequestQueue(stringRequest)
+            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
 
         restore_button.setOnClickListener {
             val urlBuilder = StringBuilder(getServerUrl(this))
                 .append("/api/0.5/load_backup")
-            val stringRequest = StringRequest(
-                Request.Method.GET, urlBuilder.toString(),
-                Response.Listener {},
+            val jsonObjectRequest = JsonObjectRequest(
+                Request.Method.GET, urlBuilder.toString(), null,
+                Response.Listener {
+                    Toast.makeText(this, it.getString("msg"), Toast.LENGTH_LONG).show()
+                },
                 Response.ErrorListener {
                     Toast.makeText(this, "Restore error", Toast.LENGTH_SHORT).show()
                 }
             )
-            stringRequest.retryPolicy = DefaultRetryPolicy(100000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-            VolleyQueue.getInstance(this).addToRequestQueue(stringRequest)
+            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
 
         import_button.setOnClickListener {
@@ -84,15 +86,16 @@ class DataActivity : AppCompatActivity() {
                 .append("&min_lon=${boundingBox.lonWest}")
                 .append("&max_lat=${boundingBox.latNorth}")
                 .append("&max_lon=${boundingBox.lonEast}")
-            val stringRequest = StringRequest(
-                Request.Method.GET, urlBuilder.toString(),
-                Response.Listener {},
+            val jsonObjectRequest = JsonObjectRequest(
+                Request.Method.GET, urlBuilder.toString(), null,
+                Response.Listener {
+                    Toast.makeText(this, it.getString("msg"), Toast.LENGTH_LONG).show()
+                },
                 Response.ErrorListener {
                     Toast.makeText(this, "Import error", Toast.LENGTH_SHORT).show()
                 }
             )
-            stringRequest.retryPolicy = DefaultRetryPolicy(100000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-            VolleyQueue.getInstance(this).addToRequestQueue(stringRequest)
+            VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
     }
 }

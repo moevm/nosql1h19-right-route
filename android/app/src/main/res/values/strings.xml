@@ -28,8 +28,8 @@
     <string name="no_connection">No connection</string>
 
 
-    <string name="distance_in_m">%1$dm</string>
-    <string name="distance_in_km">%1$skm</string>
+    <string name="distance_in_m">%1$dm %2$dmin</string>
+    <string name="distance_in_km">%1$skm %2$dmin</string>
     <string name="point_location">%1$s, %2$s</string>
 
 

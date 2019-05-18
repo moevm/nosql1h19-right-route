@@ -324,34 +324,51 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun showRoutesInfo(json: JSONObject) {
-        val leftDistance = json.getDouble("distance_left")
-        val rightDistance = json.getDouble("distance_right")
+        if (json.getBoolean("error")) {
+            Toast.makeText(this, json.getString("msg"), Toast.LENGTH_LONG).show()
+            return
+        }
+        val data = json.getJSONObject("data")
+        val leftDistance = data.getDouble("distance_left")
+        val rightDistance = data.getDouble("distance_right")
 
-        if (json.getJSONArray("path_left").length() == 0) {
+        if (data.getJSONArray("path_left").length() == 0) {
             left_route_stats.text = getString(R.string.not_found)
         } else if (leftDistance < 1.0) {
             left_route_stats.text =
-                getString(R.string.distance_in_m, leftDistance.times(1000).toInt())
+                getString(R.string.distance_in_m, leftDistance.times(1000).toInt(), data.getDouble("time_left").times(60).toInt())
         } else {
             left_route_stats.text =
-                getString(R.string.distance_in_km, String.format("%.1f", leftDistance))
+                getString(R.string.distance_in_km, String.format("%.1f", leftDistance), data.getDouble("time_left").times(60).toInt())
         }
 
-        if (json.getJSONArray("path_right").length() == 0) {
+        if (data.getJSONArray("path_right").length() == 0) {
             right_route_stats.text = getString(R.string.not_found)
         } else if (rightDistance < 1.0) {
             right_route_stats.text =
-                getString(R.string.distance_in_m, rightDistance.times(1000).toInt())
+                getString(R.string.distance_in_m, rightDistance.times(1000).toInt(), data.getDouble("time_left").times(60).toInt())
         } else {
             right_route_stats.text =
-                getString(R.string.distance_in_km, String.format("%.1f", rightDistance))
+                getString(R.string.distance_in_km, String.format("%.1f", rightDistance), data.getDouble("time_left").times(60).toInt())
         }
 
-        routes_info_layout.visibility = View.VISIBLE
+        routes_info_layout.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate()
+                .alpha(1f)
+                .setListener(null)
+        }
     }
 
     private fun hideRoutesInfo() {
-        routes_info_layout.visibility = View.GONE
+        routes_info_layout.animate()
+            .alpha(0f)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    routes_info_layout.visibility = View.GONE
+                }
+            })
     }
 
 
@@ -418,7 +435,12 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun drawRoutes(json: JSONObject) {
-        val rightWayJSON = json.getJSONArray("path_right")
+        if (json.getBoolean("error")) {
+            Toast.makeText(this, json.getString("msg"), Toast.LENGTH_LONG).show()
+            return
+        }
+        val data = json.getJSONObject("data")
+        val rightWayJSON = data.getJSONArray("path_right")
         val rightWayPoints = ArrayList<GeoPoint>()
         for (i in 0 until rightWayJSON.length()) {
             rightWayPoints.add(
@@ -433,7 +455,7 @@ class MainActivity : AppCompatActivity() {
         rightWayPolyline.color = Color.RED
         rightWayPolyline.width = 8.0f
 
-        val leftWayJSON = json.getJSONArray("path_left")
+        val leftWayJSON = data.getJSONArray("path_left")
         val leftWayPoints = ArrayList<GeoPoint>()
         for (i in 0 until leftWayJSON.length()) {
             leftWayPoints.add(
@@ -504,7 +526,7 @@ class MainActivity : AppCompatActivity() {
                 drawRoutes(response)
             },
             Response.ErrorListener {
-                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Routing error", Toast.LENGTH_SHORT).show()
             }
         )
 

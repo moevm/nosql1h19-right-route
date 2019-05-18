@@ -10,6 +10,7 @@
     <dimen name="info_text_margin">16dp</dimen>
     <dimen name="button_margin">8dp</dimen>
     <dimen name="default_margin">8dp</dimen>
+    <dimen name="small_margin">4dp</dimen>
     <dimen name="routes_button_width">130dp</dimen>
     <dimen name="routes_button_height">35dp</dimen>
 

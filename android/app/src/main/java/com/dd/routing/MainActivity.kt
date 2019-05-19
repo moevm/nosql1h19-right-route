@@ -277,7 +277,6 @@ class MainActivity : AppCompatActivity() {
         searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         map.overlays.add(searchMarker)
         map.invalidate()
-        //close_button.visibility = View.VISIBLE
     }
 
     private fun addMarker(point: GeoPoint) {
@@ -301,7 +300,6 @@ class MainActivity : AppCompatActivity() {
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         map.overlays.add(marker)
         map.invalidate()
-        //close_button.visibility = View.VISIBLE
     }
 
     private fun removeMarker(marker: Marker) {
@@ -541,6 +539,7 @@ class MainActivity : AppCompatActivity() {
 
         hidePointInfo()
         showRoutesInfo(json)
+        close_button.visibility = View.VISIBLE
     }
 
 

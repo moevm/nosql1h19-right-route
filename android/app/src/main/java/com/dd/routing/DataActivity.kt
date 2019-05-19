@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -95,6 +96,8 @@ class DataActivity : AppCompatActivity() {
                     Toast.makeText(this, "Import error", Toast.LENGTH_SHORT).show()
                 }
             )
+            jsonObjectRequest.retryPolicy = DefaultRetryPolicy(5000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+
             VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
     }

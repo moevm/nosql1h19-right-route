@@ -1,18 +1,21 @@
 package com.dd.routing
 
 import android.graphics.Color
+import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import kotlinx.android.synthetic.main.activity_available_area.*
+import kotlinx.android.synthetic.main.activity_available_area.location_button
 import kotlinx.android.synthetic.main.activity_main_content.map
 import kotlinx.android.synthetic.main.activity_main_content.search_view
 import org.json.JSONObject
@@ -21,14 +24,19 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.IOException
+import java.util.*
+import kotlin.collections.ArrayList
 
 class AvailableAreaActivity : AppCompatActivity() {
 
     private val areas = ArrayList<Polygon>()
     private lateinit var locationOverlay: MyLocationNewOverlay
+    private var searchMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +66,6 @@ class AvailableAreaActivity : AppCompatActivity() {
         ) as ImageView).layoutParams = LinearLayout.LayoutParams(0, 0)
 
         displayAvailableArea()
-
         setListeners()
     }
 
@@ -124,7 +131,68 @@ class AvailableAreaActivity : AppCompatActivity() {
     }
 
 
+    private fun addSearchMarker(point: GeoPoint) {
+        if (searchMarker != null) {
+            map.overlays.remove(searchMarker)
+            searchMarker = null
+        }
+        searchMarker = Marker(map)
+        searchMarker?.icon = getDrawable(R.drawable.ic_marker_search)
+        searchMarker?.setOnMarkerClickListener { marker, mapView ->
+            mapView.overlays.remove(marker)
+            searchMarker = null
+            mapView.invalidate()
+            true
+        }
+        searchMarker?.position = point
+        searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        map.overlays.add(searchMarker)
+        map.invalidate()
+        //close_button.visibility = View.VISIBLE
+    }
+
     private fun setListeners() {
+
+        search_view.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                search_view.clearFocus()
+                if (query !== null) {
+                    val geocoder = Geocoder(this@AvailableAreaActivity, Locale.ROOT)
+                    try {
+                        val boundingBox = map.boundingBox
+                        geocoder.getFromLocationName(
+                            query,
+                            1,
+                            boundingBox.latSouth,
+                            boundingBox.lonWest,
+                            boundingBox.latNorth,
+                            boundingBox.lonEast
+                        ).firstOrNull()?.let {
+                            addSearchMarker(GeoPoint(it.latitude, it.longitude))
+                            map.zoomToBoundingBox(
+                                BoundingBox(
+                                    it.latitude + 0.02,
+                                    it.longitude + 0.02,
+                                    it.latitude - 0.02,
+                                    it.longitude - 0.02
+                                ), true
+                            )
+                        }
+                    } catch (e: IOException) {
+                        Toast.makeText(this@AvailableAreaActivity, getText(R.string.no_connection), Toast.LENGTH_SHORT).show()
+                    } catch (e: IllegalArgumentException) {
+
+                    }
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return true
+            }
+
+        })
+
         back_button.setOnClickListener {
             onBackPressed()
         }

@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
     private val routes = ArrayList<Polyline>()
     private val areas = ArrayList<Polygon>()
     private var isAvailableAreaShown = false
+    private var searchMarker: Marker? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,6 +106,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
+
         search_view.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 search_view.clearFocus()
@@ -120,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                             boundingBox.latNorth,
                             boundingBox.lonEast
                         ).firstOrNull()?.let {
-                            addMarker(GeoPoint(it.latitude, it.longitude))
+                            addSearchMarker(GeoPoint(it.latitude, it.longitude))
                             map.zoomToBoundingBox(
                                 BoundingBox(
                                     it.latitude + 0.02,
@@ -256,21 +258,63 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun addSearchMarker(point: GeoPoint) {
+        if (searchMarker != null) {
+            map.overlays.remove(searchMarker)
+            searchMarker = null
+        }
+        searchMarker = Marker(map)
+        searchMarker?.icon = getDrawable(R.drawable.ic_marker_search)
+        searchMarker?.setOnMarkerClickListener { marker, mapView ->
+            addMarker(marker.position)
+            mapView.overlays.remove(marker)
+            searchMarker = null
+            mapView.invalidate()
+            true
+        }
+        searchMarker?.position = point
+        searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        map.overlays.add(searchMarker)
+        map.invalidate()
+    }
+
     private fun addMarker(point: GeoPoint) {
         val marker = Marker(map)
         if (markers.size == 2) {
             map.overlays.remove(markers[0])
             markers.removeAt(0)
         }
-        marker.icon = getDrawable(R.drawable.ic_marker_red)
         markers.add(marker)
-        markers.first().title = "Start"
-        markers.last().title = "End"
+        markers.first().icon = getDrawable(R.drawable.ic_marker_start)
+        markers.last().icon = getDrawable(R.drawable.ic_marker_end)
+        markers.first().setOnMarkerClickListener { m, _ ->
+            removeMarker(markers.first())
+            true
+        }
+        markers.last().setOnMarkerClickListener { m, _ ->
+            removeMarker(markers.last())
+            true
+        }
         marker.position = point
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         map.overlays.add(marker)
         map.invalidate()
-        close_button.visibility = View.VISIBLE
+    }
+
+    private fun removeMarker(marker: Marker) {
+        map.overlays.remove(marker)
+        markers.remove(marker)
+        hidePointInfo()
+        map.invalidate()
+
+        if(markers.isNotEmpty()) {
+            val point = markers.first().position
+            map.overlays.remove(markers.first())
+            markers.remove(markers.first())
+            showPointInfo(getPointInfo(point))
+            addMarker(point)
+        }
     }
 
 
@@ -336,20 +380,36 @@ class MainActivity : AppCompatActivity() {
             left_route_stats.text = getString(R.string.not_found)
         } else if (leftDistance < 1.0) {
             left_route_stats.text =
-                getString(R.string.distance_in_m, leftDistance.times(1000).toInt(), data.getDouble("time_left").times(60).toInt())
+                getString(
+                    R.string.distance_in_m,
+                    leftDistance.times(1000).toInt(),
+                    data.getDouble("time_left").toInt()
+                )
         } else {
             left_route_stats.text =
-                getString(R.string.distance_in_km, String.format("%.1f", leftDistance), data.getDouble("time_left").times(60).toInt())
+                getString(
+                    R.string.distance_in_km,
+                    String.format("%.1f", leftDistance),
+                    data.getDouble("time_left").toInt()
+                )
         }
 
         if (data.getJSONArray("path_right").length() == 0) {
             right_route_stats.text = getString(R.string.not_found)
         } else if (rightDistance < 1.0) {
             right_route_stats.text =
-                getString(R.string.distance_in_m, rightDistance.times(1000).toInt(), data.getDouble("time_left").times(60).toInt())
+                getString(
+                    R.string.distance_in_m,
+                    rightDistance.times(1000).toInt(),
+                    data.getDouble("time_right").toInt()
+                )
         } else {
             right_route_stats.text =
-                getString(R.string.distance_in_km, String.format("%.1f", rightDistance), data.getDouble("time_left").times(60).toInt())
+                getString(
+                    R.string.distance_in_km,
+                    String.format("%.1f", rightDistance),
+                    data.getDouble("time_right").toInt()
+                )
         }
 
         routes_info_layout.apply {
@@ -479,6 +539,7 @@ class MainActivity : AppCompatActivity() {
 
         hidePointInfo()
         showRoutesInfo(json)
+        close_button.visibility = View.VISIBLE
     }
 
 

@@ -42,6 +42,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity() {
@@ -383,14 +384,14 @@ class MainActivity : AppCompatActivity() {
                 getString(
                     R.string.distance_in_m,
                     leftDistance.times(1000).toInt(),
-                    data.getDouble("time_left").toInt()
+                    data.getDouble("time_left").toFloat().roundToInt()
                 )
         } else {
             left_route_stats.text =
                 getString(
                     R.string.distance_in_km,
                     String.format("%.1f", leftDistance),
-                    data.getDouble("time_left").toInt()
+                    data.getDouble("time_left").toFloat().roundToInt()
                 )
         }
 
@@ -401,14 +402,14 @@ class MainActivity : AppCompatActivity() {
                 getString(
                     R.string.distance_in_m,
                     rightDistance.times(1000).toInt(),
-                    data.getDouble("time_right").toInt()
+                    data.getDouble("time_right").toFloat().roundToInt()
                 )
         } else {
             right_route_stats.text =
                 getString(
                     R.string.distance_in_km,
                     String.format("%.1f", rightDistance),
-                    data.getDouble("time_right").toInt()
+                    data.getDouble("time_right").toFloat().roundToInt()
                 )
         }
 

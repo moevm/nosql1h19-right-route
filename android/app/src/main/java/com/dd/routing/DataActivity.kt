@@ -96,8 +96,6 @@ class DataActivity : AppCompatActivity() {
                     Toast.makeText(this, "Import error", Toast.LENGTH_SHORT).show()
                 }
             )
-            jsonObjectRequest.retryPolicy = DefaultRetryPolicy(5000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-
             VolleyQueue.getInstance(this).addToRequestQueue(jsonObjectRequest)
         }
     }

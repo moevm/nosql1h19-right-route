@@ -385,14 +385,14 @@ class MainActivity : AppCompatActivity() {
                 getString(
                     R.string.distance_in_m,
                     leftDistance.times(1000).toInt(),
-                    data.getDouble("time_left").times(60).toInt()
+                    data.getDouble("time_left").toInt()
                 )
         } else {
             left_route_stats.text =
                 getString(
                     R.string.distance_in_km,
                     String.format("%.1f", leftDistance),
-                    data.getDouble("time_left").times(60).toInt()
+                    data.getDouble("time_left").toInt()
                 )
         }
 
@@ -403,14 +403,14 @@ class MainActivity : AppCompatActivity() {
                 getString(
                     R.string.distance_in_m,
                     rightDistance.times(1000).toInt(),
-                    data.getDouble("time_left").times(60).toInt()
+                    data.getDouble("time_right").toInt()
                 )
         } else {
             right_route_stats.text =
                 getString(
                     R.string.distance_in_km,
                     String.format("%.1f", rightDistance),
-                    data.getDouble("time_left").times(60).toInt()
+                    data.getDouble("time_right").toInt()
                 )
         }
 

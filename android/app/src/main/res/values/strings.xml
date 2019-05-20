@@ -25,11 +25,29 @@
     <string name="left_route_label_text">Without left</string>
     <string name="right_route_label_text">Normal</string>
     <string name="not_found">Not found</string>
+    <string name="no_connection">No connection</string>
 
-    <string name="distance_in_m">%1$dm</string>
-    <string name="distance_in_km">%1$skm</string>
+
+    <string name="distance_in_m">%1$dm %2$dmin</string>
+    <string name="distance_in_km">%1$skm %2$dmin</string>
     <string name="point_location">%1$s, %2$s</string>
 
 
-    <string name="info_text"><![CDATA[<b>Тут</b> должна быть какая-то информация]]></string>
+    <string name="info_text"><![CDATA[<h3>Поиск маршрутов без левых поворотов и разворотов</h3>
+Суть приложения заключается в проверке теории о том, что маршруты без левых поворотов и разворотов часто могут оказаться быстрее чем обычные.<br>
+
+<h3>Используемые технологии</h3>
+<ul>
+  <li>MongoDB</li>
+  <li>Python 3.7</li>
+  <li>Flask</li>
+  <li>Kotlin</li>
+</ul>
+
+<h3>Состав команды</h3>
+<ul>
+  <li>Иванов Дмитрий 6303</li>
+  <li>Ильяшук Данил 6303</li>
+</ul>]]></string>
+
 </resources>

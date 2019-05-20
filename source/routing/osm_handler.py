@@ -62,24 +62,39 @@ class OsmHandler(object):
 
                     if check_tag(k):
                         record['tags'][k] = v
+
+                    def check_speed(tg):
+                        dict = {
+                            'RU:urban': 60,
+                            'RU:rural': 90,
+                            'RU:motorway': 110
+                        }
+                        if tg in dict:
+                            return dict[tg]
+                        else:
+                            try:
+                                speed = int(tg)
+                            except ValueError:
+                                speed = 60
+                            return speed
+
+                    if k == 'maxspeed':
+                        record['tags'][k] = check_speed(v)
+
                 elif name == 'way':
                     # Insert remaining nodes
                     if len(nodes) > 0:
                         try:
                             self.db_client.nodes.insert_many(nodes, ordered=False)
                         except pymongo.errors.BulkWriteError:
-                            print('>>> Есть дубликаты узлов, но всё норм')
+                            pass    # дублирование ключей возможно при импорте смежных зон
                         nodes = []
 
                     record = self.fill_default(attrs)
                     record['nodes'] = []
-                elif name == 'relation':
-                    continue
                 elif name == 'nd':
                     ref = int(attrs['ref'])
                     record['nodes'].append(ref)
-                elif name == 'member':
-                    continue
             elif 'end' == event:
                 """Finish parsing an element
                 (only really used with nodes, ways)"""
@@ -91,7 +106,7 @@ class OsmHandler(object):
                         try:
                             self.db_client.nodes.insert_many(nodes, ordered=False)
                         except pymongo.errors.BulkWriteError:
-                            print('>>> Есть дубликаты путей, но всё норм')
+                            pass    # дублирование ключей возможно при импорте смежных зон
                         nodes = []
                     record = {}
                 elif name == 'way':
@@ -113,14 +128,22 @@ class OsmHandler(object):
                         try:
                             self.db_client.ways.insert_many(ways, ordered=False)
                         except pymongo.errors.BulkWriteError:
-                            print('>>> Есть дубликаты путей, но всё норм')
+                            pass    # дублирование ключей возможно при импорте смежных зон
                         ways = []
 
                     record = {}
-                elif name == 'relation':
-                    continue
             elem.clear()
             root.clear()
+        if len(nodes) > 0:
+            try:
+                self.db_client.nodes.insert_many(nodes, ordered=False)
+            except pymongo.errors.BulkWriteError:
+                pass  # дублирование ключей возможно при импорте смежных зон
+        if len(ways) > 0:
+            try:
+                self.db_client.ways.insert_many(ways, ordered=False)
+            except pymongo.errors.BulkWriteError:
+                pass  # дублирование ключей возможно при импорте смежных зон
         return bounds
 
     def create_backup(self, bounds, path=os.path.join('..', 'settings', 'backup.json')):

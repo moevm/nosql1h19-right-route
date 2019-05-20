@@ -77,9 +77,9 @@ class AStar:
         else:
             return reversed(list(_gen()))
 
-    def astar(self, start, goal, nodes_client_for_left=None, reversePath=False):
+    def astar(self, start, goal, dist_flag=False, nodes_client_for_left=None, reversePath=False):
         if self.is_goal_reached(start, goal):
-            return [start]
+            return {'path': [start], 'dist': 0}
         searchNodes = AStar.SearchNodeDict()
         startNode = searchNodes[start] = AStar.SearchNode(
             start, gscore=.0, fscore=self.heuristic_cost_estimate(start, goal))
@@ -88,25 +88,24 @@ class AStar:
         while openSet:
             current = heappop(openSet)
             if self.is_goal_reached(current.data, goal):
-                return self.reconstruct_path(current, reversePath)
+                return {'path': list(self.reconstruct_path(current, reversePath)), 'dist': current.gscore}
             current.out_openset = True
             current.closed = True
 
             cur, prev = None, None
             # если учёт левых поворотов - учёт предыдущего шага
-            if nodes_client_for_left:
+            if nodes_client_for_left and current.came_from:
                 cur = nodes_client_for_left.find_one({'_id': current.data}, {'loc': 1})
-                prev = cur
-                if current.came_from:
-                    prev = nodes_client_for_left.find_one({'_id': current.came_from.data}, {'loc': 1})
+                prev = nodes_client_for_left.find_one({'_id': current.came_from.data}, {'loc': 1})
 
-            neighbors = [searchNodes[int(n)] for n in self.neighbors(current.data)]
+            info_neighbors = self.neighbors(current.data)
+            neighbors = [searchNodes[int(n)] for n in info_neighbors.keys()]
             for neighbor in neighbors:
                 if neighbor.closed:
                     continue
 
                 # поиск поворотов налево/разворотов
-                if nodes_client_for_left:
+                if nodes_client_for_left and current.came_from:
                     new = nodes_client_for_left.find_one({'_id': neighbor.data}, {'loc': 1})
                     prev_vector = [(cur['loc'][1] - prev['loc'][1]), (cur['loc'][0] - prev['loc'][0])]
                     tmp_vector = [(new['loc'][1] - prev['loc'][1]), (new['loc'][0] - prev['loc'][0])]
@@ -114,10 +113,8 @@ class AStar:
 
                     import numpy as np
 
-                    cos = 1
-                    if current.came_from:
-                        cos = np.dot(prev_vector, new_vector) / (np.linalg.norm(prev_vector) * np.linalg.norm(new_vector))
-                        cos = np.clip(cos, -1, 1)  # угол между векторами движения
+                    cos = np.dot(prev_vector, new_vector) / (np.linalg.norm(prev_vector) * np.linalg.norm(new_vector))
+                    cos = np.clip(cos, -1, 1)  # угол между векторами движения
                     ang = np.degrees(np.arccos(np.clip(cos, -1, 1)))
                     tmp = float(np.cross(prev_vector, tmp_vector))  # для определения с какой стороны точка
                     if tmp > 0:
@@ -128,7 +125,7 @@ class AStar:
                         if 140.0 <= ang <= 180.0:       # разворот
                             continue
 
-                tentative_gscore = current.gscore + self.distance_between(current.data, neighbor.data)
+                tentative_gscore = current.gscore + self.distance_between(current.data, neighbor.data, dist_flag, info_neighbors[str(neighbor.data)])
                 if tentative_gscore >= neighbor.gscore:
                     continue
                 neighbor.came_from = current

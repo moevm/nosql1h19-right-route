@@ -1,3 +1,5 @@
 flask
 pymongo
 numpy
+overpy
+requests

@@ -23,3 +23,6 @@
 - Android-приложение
     - Выполнить команду *`gradlew assembleDebug`*
     - Apk-файл может быть найден в *`app/build/outputs/apk/app-debug.apk`*
+
+### Screencast
+- https://drive.google.com/file/d/1S_qF8ZBfbweO2GWcNZUhZLefzs_i3mHw/
